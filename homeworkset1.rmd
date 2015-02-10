@@ -1,0 +1,53 @@
+---
+title: "hwset1"
+author: "Katie Daisey"
+date: "Monday, February 09, 2015"
+output: html_document
+---
+
+#Homework Set 1
+
+##Question 1
+Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
+```{r echo=FALSE}
+xrf<-c(85.1, 81.4, 77.1, 84.5, 87.9, 83.2, 86.6, 83.9, 81.1, 80.8)
+    icp<-c(87.4, 90.1, 86.2, 89.2, 88.4, 82.9, 81.9, 87.4, 82.1, 80.6)
+    data.1<-cbind(xrf,icp)
+```
+```{r}
+data.1
+```
+
+a) Treating these methods as separate, but producing replicated results, the results _ distinguishable at 95% confidence and _ at 90% confidence.
+
+b) If we instead treat the data as pairs of non-replicated samples, they are _ at 95% confidence and _ at 90% confidence.
+
+c) what p values mean
+
+d) 95% vs 90% confidence
+e) more statistical power
+
+
+
+##Question 2
+Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
+```{r, echo=4, eval=TRUE}
+N<-c(0:14)
+f<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
+gold<-cbind(N,f)
+gold
+```
+a) The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:
+```{r}
+particles<-N*f
+total_particles<-sum(particles)
+total_obs<-sum(f)
+weighted_mean<-signif(total_particles/total_obs,3)
+```
+giving a mean number of particles of `r weighted_mean`.
+
+b)A Poisson distribution
+
+
+##Question 3
+a) 
