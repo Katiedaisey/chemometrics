@@ -6,6 +6,7 @@ output: html_document
 ---
 
 #Homework Set 1
+1-a,b,c,d,e;2-b;3-b,c;4;5-a,b
 
 ##Question 1
 Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
@@ -18,9 +19,9 @@ xrf<-c(85.1, 81.4, 77.1, 84.5, 87.9, 83.2, 86.6, 83.9, 81.1, 80.8)
 data.1
 ```
 
-a) Treating these methods as separate, but producing replicated results, the results _ distinguishable at 95% confidence and _ at 90% confidence.
+a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), the results _ distinguishable at 95% confidence and _ at 90% confidence. (Note - with only 10)
 
-b) If we instead treat the data as pairs of non-replicated samples, they are _ at 95% confidence and _ at 90% confidence.
+b) If we instead treat the data as pairs of non-replicated samples, treating each spot as separate from the other locations and variation between methods arising from chance) they are _ at 95% confidence and _ at 90% confidence.
 
 c) what p values mean
 
@@ -31,11 +32,12 @@ e) more statistical power
 
 ##Question 2
 Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
-```{r, echo=4, eval=TRUE}
+```{r, echo=FALSE, eval=TRUE}
 N<-c(0:14)
 f<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
 gold<-cbind(N,f)
-gold
+gold2<-rbind(N,f)
+gold2
 ```
 a) The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:
 ```{r}
@@ -44,10 +46,94 @@ total_particles<-sum(particles)
 total_obs<-sum(f)
 weighted_mean<-signif(total_particles/total_obs,3)
 ```
-giving a mean number of particles of `r weighted_mean`.
+giving a mean number of `r weighted_mean` particles per interval.
 
 b)A Poisson distribution
 
 
 ##Question 3
-a) 
+Looking a little closer at randomness
+
+a)  Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for replicability, the seed was set to 292015).
+ 
+```{r echo=FALSE}
+set.seed(292015)
+r.10<-rnorm(10)
+r.100<-rnorm(100)
+r.1000<-rnorm(1000)
+obs<-c(10,100,1000)
+mean.10<-mean(r.10)
+mean.100<-mean(r.100)
+mean.1000<-mean(r.1000)
+mean<-c(mean.10,mean.100,mean.1000)
+std<-c(sd(r.10),sd(r.100),sd(r.1000))
+table.3<-rbind(mean,std)
+colnames(table.3)<-c(10,100,1000)
+table.3
+```
+As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the popultation, but because the numbers are generated at random, they only have a probablity of exactly mirroring the sample.  As the number of samples we generate increase, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
+
+b) The Central Limit Theorem, a related but separate theorem, states that the means of samples generated indepenently and randomly, *regardless of the probablity distribution used to generate them*, will approximate a normal distribution.
+For instance, say we have a normally-generated dataset of 1000 integers with a mean of 0 and a variance of 10 (`rnorm(1000,0,10)`).  We then sample (without replacement) 10 observations from dataset 1000 times.  We do similarly for 50, 100, and 200 observations, calculating the mean for each sample.
+```{r}
+set.seed(2102015)
+dataset<-rnorm(1000,0,10)
+sample_means<-data.frame()
+for (i in 1:1000){
+    s.10<-mean(sample(dataset,10))
+    s.50<-mean(sample(dataset,50))
+    s.100<-mean(sample(dataset,100))
+    s.200<-mean(sample(dataset,200))
+    s.all<-c(s.10,s.50,s.100,s.200)
+    sample_means<-rbind(sample_means,s.all)
+}
+colnames(sample_means)<-c("10","50","100","200")
+#10 observations
+hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
+lines(density(sample_means[,1]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#50 observations
+hist(sample_means[,2],freq=F,main="Means of 50 normal observations",xlab="mean")
+lines(density(sample_means[,2]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#100 observations
+hist(sample_means[,3],freq=F,main="Means of 100 normal observations",xlab="mean")
+lines(density(sample_means[,3]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#200 observations
+hist(sample_means[,4],freq=F,main="Means of 200 normal observations",xlab="mean")
+lines(density(sample_means[,4]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+```
+
+c)  Suppose we now compare that with a uniformly-distributed dataset.
+```{r echo=FALSE}
+set.seed(2102015)
+dataset<-runif(1000,0,10)
+sample_means<-data.frame()
+for (i in 1:1000){
+    s.10<-mean(sample(dataset,10))
+    s.50<-mean(sample(dataset,50))
+    s.100<-mean(sample(dataset,100))
+    s.200<-mean(sample(dataset,200))
+    s.all<-c(s.10,s.50,s.100,s.200)
+    sample_means<-rbind(sample_means,s.all)
+}
+colnames(sample_means)<-c("10","50","100","200")
+#10 observations
+hist(sample_means[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
+lines(density(sample_means[,1]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#50 observations
+hist(sample_means[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
+lines(density(sample_means[,2]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#100 observations
+hist(sample_means[,3],freq=F,main="Means of 100 uniform observations",xlab="mean")
+lines(density(sample_means[,3]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+#200 observations
+hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
+lines(density(sample_means[,4]),col="navy",lwd=3)
+lines(density(dataset),col="red",lwd=3)
+```
