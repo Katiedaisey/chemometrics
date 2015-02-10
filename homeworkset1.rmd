@@ -6,7 +6,7 @@ output: html_document
 ---
 
 #Homework Set 1
-1-a,b,c,d,e;2-b;3-b,c;4;5-a,b
+1-a,b,c,d,e;2-b;3-b,c;4
 
 ##Question 1
 Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
@@ -136,4 +136,44 @@ lines(density(dataset),col="red",lwd=3)
 hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
 lines(density(sample_means[,4]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
+```
+
+
+
+4.
+
+5.
+A certain chemical analysis is performed with a known probablity of error of 0.07.  The chemical analysis can be performed qualitativly, producing either a "positive" or a "negative" outcome.  The analysis is independently run in triplicate to produce one result, therefore even a single erroneous analysis will produce an erroneous result.
+
+a) Probablity density functions can be calculated for errors by calculating independently the probablity that 0, 1, 2, and 3 analyses will be in error.  As the analyses are independent, the probablities for each can be multiplied.  P(3), the probablity that all 3 analyses will be in error is easily calculated as the cube of the error, 0.07.
+```{r echo=1}
+P.3<-0.07*0.07*0.07
+P.3
+```
+The probablity of none of the analyses being erroneous would be the probablity of all the analyses being correct or (1-0.07) cubed.
+```{r echo=1}
+P.0<-.93*.93*.93
+P.0
+```
+We then must consider P(1) and P(2), the probability of having only 1 and 2 erroneous analyses respectively.  This is a bit more difficult as we must consider the ways in which we can get *exactly* one erroneous test, but it is easily seen that there are only three ways to do so (TTE, TET, ETT). We can then calculated P(1) as the independent probablities multiplied by the number of ways we can get those analyses.
+```{r echo=1}
+P.1<-.07*.93*.93*3
+P.1
+```
+P(2) is calculated similarly.
+```{r echo=1}
+P.2<-.07*.07*.93*3
+P.2
+```
+
+As a check, we can see that the sum of all possible outcomes equals 1.
+```{r echo=1}
+P.total<-P.0+P.1+P.2+P.3
+P.total
+```
+
+b) Now, knowing this, we decide to perform 3 additional analyses on those samples that test "positive" for an analyte (regardless of if it is erroneous or not), generating an additional result. Since the outcome of the analysis is independent from the reliblity of the result, we can consider the two tests independent.  The probablity that a single analysis will be erroneous is 1-P(0), thus the probablity that both analyses will be erroneous is simply (1-P(0))*(1-P(0))
+```{r echo=1}
+P.both<-(1-P.0)*(1-P.0)
+P.both
 ```
