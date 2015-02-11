@@ -6,18 +6,20 @@ output: html_document
 ---
 
 #Homework Set 1
-1-a,b,c,d,e;2-b;3-b,c;4
+1-a,b,c,d,e;,3-b,c;4
+2-b check for normalization, adjust axis to include top point
+3-b,c check pdfs - think it might be okay, variance
 
 ##Question 1
 Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
 ```{r echo=FALSE}
 xrf<-c(85.1, 81.4, 77.1, 84.5, 87.9, 83.2, 86.6, 83.9, 81.1, 80.8)
-    icp<-c(87.4, 90.1, 86.2, 89.2, 88.4, 82.9, 81.9, 87.4, 82.1, 80.6)
-    data.1<-cbind(xrf,icp)
-```
-```{r}
+icp<-c(87.4, 90.1, 86.2, 89.2, 88.4, 82.9, 81.9, 87.4, 82.1, 80.6)
+
+data.1<-cbind(xrf,icp)
 data.1
 ```
+
 
 a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), the results _ distinguishable at 95% confidence and _ at 90% confidence. (Note - with only 10)
 
@@ -48,7 +50,15 @@ weighted_mean<-signif(total_particles/total_obs,3)
 ```
 giving a mean number of `r weighted_mean` particles per interval.
 
-b)A Poisson distribution
+b)A Poisson distribution is easily calculated in R using the `dpois` function with a specified lambda of `weighted_mean`.  The vertical axis (frequency) is normalized via the first element (number of no clusters emitted).
+
+```{r}
+plotpois<-cbind(N,dpois(N,weighted_mean))
+weight<-f[[1]]/plotpois[1,2]
+plotpois[,2]<-weight*plotpois[,2]
+plot(gold,main="Frequency of alpha particles ejected",ylab="frequency",xlab="size of cluster")
+points(plotpois,col=3)
+```
 
 
 ##Question 3
@@ -88,6 +98,11 @@ for (i in 1:1000){
     sample_means<-rbind(sample_means,s.all)
 }
 colnames(sample_means)<-c("10","50","100","200")
+var_sx<-matrix(c(var(sample_means[,1]),var(sample_means[,2]),var(sample_means[,3]),var(sample_means[,4])),nrow=1,ncol=4)
+colnames(var_sx)<-c("10","50","100","200")
+var_sx
+
+#plots
 #10 observations
 hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
 lines(density(sample_means[,1]),col="navy",lwd=3)
@@ -112,7 +127,7 @@ set.seed(2102015)
 dataset<-runif(1000,0,10)
 sample_means<-data.frame()
 for (i in 1:1000){
-    s.10<-mean(sample(dataset,10))
+    s.10<-mean(sample(dataset,10)) 
     s.50<-mean(sample(dataset,50))
     s.100<-mean(sample(dataset,100))
     s.200<-mean(sample(dataset,200))
@@ -120,20 +135,24 @@ for (i in 1:1000){
     sample_means<-rbind(sample_means,s.all)
 }
 colnames(sample_means)<-c("10","50","100","200")
+
+var
 #10 observations
-hist(sample_means[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
+hist(sample_means[,1],main="Means of 10 uniform observations",xlab="mean")
 lines(density(sample_means[,1]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 #50 observations
-hist(sample_means[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
+hist(sample_means[,2],main="Means of 50 uniform observations",xlab="mean")
 lines(density(sample_means[,2]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 #100 observations
-hist(sample_means[,3],freq=F,main="Means of 100 uniform observations",xlab="mean")
+hist(sample_means[,3],main="Means of 100 uniform observations",xlab="mean")
 lines(density(sample_means[,3]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
+```
+```{r}
 #200 observations
-hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
+hist(sample_means[,4],main="Means of 200 uniform observations",xlab="mean")
 lines(density(sample_means[,4]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 ```
