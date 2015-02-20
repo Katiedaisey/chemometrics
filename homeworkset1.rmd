@@ -33,11 +33,11 @@ sd_xrf<-sd(xrf)
 mean_icp<-mean(icp)
 mean_xrf<-mean(xrf)
 mse<-((9*(sd_xrf)^2)+(9*(sd_icp)^2))/(18)
-t.1<-(mean_xrf-mean_icp)/(sqrt(mse)*(sqrt((1/10)+(1/10))))
+tstat1<-(mean_xrf-mean_icp)/(sqrt(mse)*(sqrt((1/10)+(1/10))))
 mean_diff<-mean(xrf-icp)
 sd_diff<-sd(xrf-icp)
 n<-10
-t.2<-mean_diff*sqrt(n)/sd_diff
+tstat2<-mean_diff*sqrt(n)/sd_diff
 ```
 
 
@@ -49,7 +49,7 @@ $$MSE=\frac{(n_{xrf} -1)\sigma _{xrf}^{2}+(n_{icp}-1)\sigma _{icp} ^{2}}{n_{xrf}
 
 
 
-giving a t statistic of `r round(t.1,3)`
+giving a t statistic of `r round(tstat.1,3)`
 
 
 The critical statistics, c, are calculated at `r round(qt(.975,9),3)` and `r round(qt(.95,9),3)` for 95% and 90% confidence respectively.
@@ -64,7 +64,7 @@ where $\bar x_{D}$ and $\sigma _{D}$ is the mean of the differences between the 
 
 
 
-Since the calculated t statistic, `r round(t.2,3)`, is above the c for 90% but below the c for 95%, we would reject the test hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
+Since the calculated t statistic, `r round(tstat.2,3)`, is above the c for 90% but below the c for 95%, we would reject the test hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
 
 
 c) what p values mean
@@ -77,10 +77,10 @@ e) more statistical power
 ##Question 2
 Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
 ```{r, echo=FALSE, eval=TRUE}
-N<-c(0:14)
-f<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
-gold<-cbind(N,f)
-gold2<-rbind(N,f)
+Num<-c(0:14)
+freq<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
+gold<-cbind(Num,freq)
+gold2<-rbind(Num,freq)
 gold2
 ```
 ```{r}
@@ -89,9 +89,9 @@ kable(gold2)
 
 a) The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:
 ```{r}
-particles<-N*f
+particles<-Num*freq
 total_particles<-sum(particles)
-total_obs<-sum(f)
+total_obs<-sum(freq)
 weighted_mean<-signif(total_particles/total_obs,3)
 ```
 giving a mean number of `r weighted_mean` particles per interval.
@@ -99,8 +99,8 @@ giving a mean number of `r weighted_mean` particles per interval.
 b) A Poisson distribution is easily calculated in R using the `dpois` function with a specified lambda of `weighted_mean`.  The vertical axis (frequency) is normalized via the first element (number of no clusters emitted).
 
 ```{r}
-plotpois<-cbind(N,dpois(N,weighted_mean))
-weight<-f[[1]]/plotpois[1,2]
+plotpois<-cbind(Num,dpois(Num,weighted_mean))
+weight<-freq[[1]]/plotpois[1,2]
 plotpois[,2]<-total_obs*plotpois[,2]
 plot(gold,main="Frequency of alpha particles ejected",ylab="frequency",xlab="size of cluster")
 points(plotpois,col=3)
@@ -121,9 +121,9 @@ obs<-c(10,100,1000)
 mean.10<-mean(r.10)
 mean.100<-mean(r.100)
 mean.1000<-mean(r.1000)
-mean<-c(mean.10,mean.100,mean.1000)
+allmeans<-c(mean.10,mean.100,mean.1000)
 std<-c(sd(r.10),sd(r.100),sd(r.1000))
-table.3<-rbind(mean,std)
+table.3<-rbind(allmeans,std)
 colnames(table.3)<-c(10,100,1000)
 table.3
 ```
