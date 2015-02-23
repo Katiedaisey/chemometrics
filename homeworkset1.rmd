@@ -34,10 +34,14 @@ mean_icp<-mean(icp)
 mean_xrf<-mean(xrf)
 mse<-((9*(sd_xrf)^2)+(9*(sd_icp)^2))/(18)
 tstat1<-(mean_xrf-mean_icp)/(sqrt(mse)*(sqrt((1/10)+(1/10))))
+a<-t.test(xrf,icp,var.equal=TRUE)#pooled varience
+tstat1p<-a[[3]]
 mean_diff<-mean(xrf-icp)
 sd_diff<-sd(xrf-icp)
 n<-10
 tstat2<-mean_diff*sqrt(n)/sd_diff
+b<-t.test(xrf,icp,paired=TRUE)#paired t test
+tstat2p<-b[[3]]
 ```
 
 
@@ -49,10 +53,10 @@ $$MSE=\frac{(n_{xrf} -1)\sigma _{xrf}^{2}+(n_{icp}-1)\sigma _{icp} ^{2}}{n_{xrf}
 
 
 
-giving a t statistic of `r round(tstat.1,3)`
+giving a t statistic of `r round(tstat1,3)` and a p-value of `r round(tstat1p,3)`.
 
 
-The critical statistics, c, are calculated at `r round(qt(.975,9),3)` and `r round(qt(.95,9),3)` for 95% and 90% confidence respectively.
+The critical statistics, c, are calculated at `r round(qt(.975,9),3)` and `r round(qt(.95,9),3)` for 95% and 90% confidence respectively or alternatively have an $\alpha$ of 0.05 and 0.10 .
 
 We cannot reject the null hypothesis (that the means of the two sets are equal) at either confidence level.  Thus, we say we cannot distinguish between the two sets with neither 95% nor 90% confidence.
 
@@ -64,13 +68,16 @@ where $\bar x_{D}$ and $\sigma _{D}$ is the mean of the differences between the 
 
 
 
-Since the calculated t statistic, `r round(tstat.2,3)`, is above the c for 90% but below the c for 95%, we would reject the test hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
+Since the calculated t statistic, `r round(tstat2,3)` and the p-value is `r round(tstat2p,3)`, is above the c for 90% but below the c for 95%, we would reject the null hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence. Alternatively, the p-value, `r round(tstat2p,3)` is above $\alpha = 0.05$ for 95% confidence, but below the $\alpha = 0.10$ for 90% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
 
 
-c) what p values mean
+c) The p value calculated by a t-test is the probablity that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
 
-d) 95% vs 90% confidence
-e) more statistical power
+d) Why is it that the results from a test done at 95% confidence and at 90% confidence sometimes differ, but not always?
+
+95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  At times, a test result will fall into this zone where it would b
+
+e) Statistical power, the probablity of not falsely accepting the null hypothesis $1-\beta$,
 
 
 
@@ -130,8 +137,8 @@ table.3
 As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the population, but because the numbers are generated at random, they only have a probability of exactly mirroring the sample.  As the number of samples we generate increase, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
 
 b) The Central Limit Theorem, a related but separate theorem, states that the means of samples generated independently and randomly, *regardless of the probablity distribution used to generate them*, will approximate a normal distribution.
-For instance, say we have a normally-generated dataset of 1000 integers with a mean of 0 and a variance of 10 (`rnorm(1000,0,10)`).  We then sample (without replacement) 10 observations from dataset 1000 times.  We do similarly for 50, 100, and 200 observations, calculating the mean for each sample.
-```{r}
+For instance, say we have a normally-generated dataset of 1000 integers with a mean of 0 and a variance of 10 (`rnorm(1000,0,sqrt(10)`).  We then sample (without replacement) 10 observations from dataset 1000 times.  We do similarly for 50, 100, and 200 observations, calculating the mean for each sample.
+```{r echo=FALSE}
 set.seed(2102015)
 dataset<-rnorm(1000,0,10)
 sample_means<-data.frame()
@@ -153,6 +160,10 @@ var_sx
 hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
 lines(density(sample_means[,1]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
+```
+
+
+```{r echo=FALSE}
 #50 observations
 hist(sample_means[,2],freq=F,main="Means of 50 normal observations",xlab="mean")
 lines(density(sample_means[,2]),col="navy",lwd=3)
@@ -166,6 +177,9 @@ hist(sample_means[,4],freq=F,main="Means of 200 normal observations",xlab="mean"
 lines(density(sample_means[,4]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 ```
+
+In each of these plots, the red line, the pdf for the dataset itself, is constant.  As the number of observations made increases, ie the more numbers we sample to calculate the mean increases, the curve not only becomes more normal-like, but the probability of the mean being around 0 increases.  In fact, since we are averaging the numbers (and therefore selecting more than one), the probability of finding a mean equal to 0 has surpassed the probability of finding a number equal to 0.
+
 
 c)  Suppose we now compare that with a uniformly-distributed dataset.
 ```{r echo=FALSE}
@@ -184,25 +198,25 @@ colnames(sample_means)<-c("10","50","100","200")
 
 var
 #10 observations
-hist(sample_means[,1],main="Means of 10 uniform observations",xlab="mean")
+hist(sample_means[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
 lines(density(sample_means[,1]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 #50 observations
-hist(sample_means[,2],main="Means of 50 uniform observations",xlab="mean")
+hist(sample_means[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
 lines(density(sample_means[,2]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 #100 observations
-hist(sample_means[,3],main="Means of 100 uniform observations",xlab="mean")
+hist(sample_means[,3],freq=F,main="Means of 100 uniform observations",xlab="mean")
 lines(density(sample_means[,3]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 ```
-```{r}
+```{r echo=FALSE}
 #200 observations
-hist(sample_means[,4],main="Means of 200 uniform observations",xlab="mean")
+hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
 lines(density(sample_means[,4]),col="navy",lwd=3)
 lines(density(dataset),col="red",lwd=3)
 ```
-
+Here, even though the underlying dataset is clearly not normal, the distributation of the means of replicate samples is indeed normal.
 
 
 4.
