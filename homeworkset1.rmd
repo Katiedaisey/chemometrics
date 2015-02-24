@@ -47,7 +47,7 @@ tstat2p<-b[[3]]
 
 a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), we calculate the t statistic for pooled variences t-Test via
 
-$$t=\frac{\mu _{xrf}-\mu _{icp}}{\sqrt{MSE}\sqrt{\frac{1}{n}+\frac{1}{n}}}$$
+$$t=\frac{\bar x _{xrf}-\bar x _{icp}}{\sqrt{MSE}\sqrt{\frac{1}{n}+\frac{1}{n}}}$$
 where MSE equals
 $$MSE=\frac{(n_{xrf} -1)\sigma _{xrf}^{2}+(n_{icp}-1)\sigma _{icp} ^{2}}{n_{xrf}+n_{icp}-2}$$
 
