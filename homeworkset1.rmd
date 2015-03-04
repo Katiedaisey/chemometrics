@@ -1,25 +1,26 @@
 ---
-title: "hwset1"
+title: "Homework #1"
 author: "Katie Daisey"
-date: "Monday, February 09, 2015"
+date: "Friday, March 06, 2015"
 output: html_document
 ---
 
-#Homework Set 1
-how much code does he want to see
-how much explanation does he want
-1-e; var test?
-3-b,c;check pdfs - think it might be okay, variance
+
+how much code does he want to see  
+how much explanation does he want  
+1-e; var test?  
+3-b,c;check pdfs - think it might be okay, variance  
 4
 
 
 ```{r echo=FALSE}
 library(knitr)
+library(lattice)
 ```
 
 ##Question 1
 Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
-```{r q1, echo=FALSE}
+```{r q1}
 xrf<-c(85.1, 81.4, 77.1, 84.5, 87.9, 83.2, 86.6, 83.9, 81.1, 80.8)
 icp<-c(87.4, 90.1, 86.2, 89.2, 88.4, 82.9, 81.9, 87.4, 82.1, 80.6)
 data.1<-cbind(xrf,icp)
@@ -27,24 +28,21 @@ data.2<-rbind(xrf,icp)
 rownames(data.2)<-c("XRF","ICP")
 colnames(data.2)<-c(1:10)
 kable(data.2,row.names=T,caption="Na concentrations (ug/g)")
-
-
-
-tstat1<-t.test(xrf,icp,var.equal=TRUE)#pooled varience
-tstat1p<-tstat1[[3]]
-
-
-tstat2<-t.test(xrf,icp,paired=TRUE)#paired t test
-tstat2p<-tstat2[[3]]
 ```
 
 
-a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), we calculate the t statistic for pooled variences t-Test via
+
+a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), we calculate the t statistic for pooled variances t-Test via
 
 $$t=\frac{\bar x _{xrf}-\bar x _{icp}}{\sqrt{MSE}\sqrt{\frac{1}{n}+\frac{1}{n}}}$$
 where MSE equals
 $$MSE=\frac{(n_{xrf} -1)\sigma _{xrf}^{2}+(n_{icp}-1)\sigma _{icp} ^{2}}{n_{xrf}+n_{icp}-2}$$
 
+```{r}
+#pooled variance
+tstat1<-t.test(xrf,icp,var.equal=TRUE)
+tstat1p<-tstat1[[3]]
+```
 giving a t statistic of `r round(tstat1[[1]],3)` and a p-value of `r round(tstat1[[3]],3)`.
 
 The critical statistics, c, are calculated at `r round(qt(.975,9),3)` and `r round(qt(.95,9),3)` for 95% and 90% confidence respectively or alternatively have an $\alpha$ of 0.05 and 0.10 .
@@ -56,20 +54,27 @@ We cannot reject the null hypothesis (that the means of the two sets are equal) 
 b) If we instead treat the data as pairs of non-replicated samples, treating each spot as separate from the other locations and variation between methods arising from chance) we must use the paired t-Test.  The t statistic is calculated as:
 $$t = \frac{\bar x_{D}}{\sigma_{D} \sqrt{n}}$$
 where $\bar x_{D}$ and $\sigma _{D}$ is the mean of the differences between the pairs.  
+```{r}
+#paired
+tstat2<-t.test(xrf,icp,paired=TRUE)
+tstat2p<-tstat2[[3]]
+```
 Since the calculated t statistic, `r round(tstat2[[1]],3)` and the p-value is `r round(tstat2[[3]],3)`, is above the c for 90% but below the c for 95%, we would reject the null hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence. Alternatively, the p-value, `r round(tstat2p,3)` is above $\alpha = 0.05$ for 95% confidence, but below the $\alpha = 0.10$ for 90% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
 
 
-c) The p value calculated by a t-test is the probablity that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
+c) The p value calculated by a t-test is the probability that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
 
 d) 95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  At times, a test result will fall into this zone where it would be accepted in the larger range (95% confidence) but not in the smaller range (90% confidence).
 
-e) Statistical power, the probablity of not falsely accepting the null hypothesis $1-\beta$,
+e) Statistical power, the probability of not falsely accepting the null hypothesis $1-\beta$,
+
 
 
 
 ##Question 2
 Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
-```{r, echo=FALSE, eval=TRUE}
+```{r gold, echo=FALSE, eval=TRUE}
+#poisson counting
 num<-c(0:14)
 freq<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
 Freq<-matrix(c("Freq",freq),nrow=1)
@@ -82,7 +87,8 @@ kable(Freq,row.names=F,caption="Frequency of alpha particles")
 
 
 a) The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:  
-```{r}
+```{r poisson}
+
 particles<-num*freq
 total_particles<-sum(particles)
 total_obs<-sum(freq)
@@ -92,55 +98,66 @@ giving a mean number of `r weighted_mean` particles per interval.
 
 b) A Poisson distribution is easily calculated in R using the `dpois` function with a specified lambda of `weighted_mean`.  The vertical axis (frequency) is normalized via the first element (number of no clusters emitted).
 
-```{r}
+```{r gold_plot}
 plotpois<-cbind(num,dpois(num,weighted_mean))
 weight<-freq[[1]]/plotpois[1,2]
 plotpois[,2]<-total_obs*plotpois[,2]
-plot(gold,main="Frequency of alpha particles ejected",ylab="frequency",xlab="size of cluster")
-points(plotpois,col=3)
-legend("topright",pch=1,col=c("black","green"),legend=c("Data pdf","Fitted pdf"),bty="n")
+
+plot(gold,main="Frequency of alpha particles ejected",ylab="Frequency",
+     xlab="Size of Cluster")
+    points(plotpois,col=3)
+    legend("topright",pch=1,col=c("black","green"),
+           legend=c("Data cdf"   ,"Fitted cdf"),bty="n")
 ```
 
 
 ##Question 3
 Looking a little closer at randomness
 
-a)  Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for replicability, the seed was set to 292015).   
-```{r echo=FALSE}
+a)  Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for applicability, the seed was set to 292015).   
+```{r rnorm_a,}
 set.seed(292015)
-r.10<-rnorm(10)
-r.100<-rnorm(100)
-r.1000<-rnorm(1000)
-obs<-c(10,100,1000)
-mean.10<-mean(r.10)
-mean.100<-mean(r.100)
-mean.1000<-mean(r.1000)
-allmeans<-c(mean.10,mean.100,mean.1000)
-std<-c(sd(r.10),sd(r.100),sd(r.1000))
-table.3<-rbind(allmeans,std)
-colnames(table.3)<-c(10,100,1000)
+
+#generate random numbers
+
+    r.10<-rnorm(10)
+    r.100<-rnorm(100)
+    r.1000<-rnorm(1000)
+    mean.10<-mean(r.10)
+    mean.100<-mean(r.100)
+    mean.1000<-mean(r.1000)
+#join in matrix
+    allmeans<-c(mean.10,mean.100,mean.1000)
+    std<-c(sd(r.10),sd(r.100),sd(r.1000))
+    table.3<-rbind(allmeans,std)
+    colnames(table.3)<-c(10,100,1000)
+
 table.3
 ```
 As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the population, but because the numbers are generated at random, they only have a probability of exactly mirroring the sample.  As the number of samples we generate increase, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
 
 b) The Central Limit Theorem, a related but separate theorem, states that the means of samples generated independently and randomly, *regardless of the probablity distribution used to generate them*, will approximate a normal distribution.  
 For instance, say we have a normally-generated dataset of 1000 integers with a mean of 0 and a variance of 10 (`rnorm(1000,0,sqrt(10)`).  We then sample (without replacement) 10 observations from dataset 1000 times.  We do similarly for 50, 100, and 200 observations, calculating the mean for each sample.  
-```{r}
+```{r rnorm_gen}
 set.seed(2102015)
+
+#create population
 dataset<-rnorm(1000,mean=0,sd=sqrt(10))
 sample_means<-data.frame()
-for (i in 1:1000){
-    s.10<-mean(sample(dataset,10))
-    s.50<-mean(sample(dataset,50))
-    s.100<-mean(sample(dataset,100))
-    s.200<-mean(sample(dataset,200))
-    s.all<-c(s.10,s.50,s.100,s.200)
-    sample_means<-rbind(sample_means,s.all)
-}
+
+#sample population
+    for (i in 1:1000){
+        s.10<-mean(sample(dataset,10))
+        s.50<-mean(sample(dataset,50))
+        s.100<-mean(sample(dataset,100))
+        s.200<-mean(sample(dataset,200))
+        s.all<-c(s.10,s.50,s.100,s.200)
+        sample_means<-rbind(sample_means,s.all)
+        }
 ```
 
 
-```{r echo=FALSE}
+```{r rnorm_table,echo=FALSE}
 colnames(sample_means)<-c("10","50","100","200")
 a<-apply(sample_means,2,FUN=mean)
 b<-apply(sample_means,2,FUN=var)
@@ -151,52 +168,61 @@ rownames(var_sx)<-c("Mean","Var")
 kable(var_sx,row.names=T,caption="Various-sized Samples of 1000 random Numbers")
 ```
 
-```{r}
-hist(dataset,freq=F)
-lines(density(dataset))
-```
 
-```{r}
+```{r plot_rnorm}
 #plots
 
 par(mfrow=c(2,2))
 #10 observations
-hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
-lines(density(sample_means[,1]),col="navy",lwd=3)
-lines(density(dataset),col="red",lwd=3)
+    hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
+    lines(density(sample_means[,1]),col="navy",lwd=3)
+    lines(density(dataset),col="red",lwd=3)
+    legend("topright",bty="n",lty=1, col=c("red","blue"), 
+           legend = c("Population","10 draws"),cex=.75)
+
 #50 observations
-hist(sample_means[,2],freq=F,main="Means of 50 normal observations",xlab="mean")
-lines(density(sample_means[,2]),col="navy",lwd=3)
-lines(density(dataset),col="red",lwd=3)
+    hist(sample_means[,2],freq=F,main="Means of 50 normal observations",xlab="mean")
+    lines(density(sample_means[,2]),col="navy",lwd=3)
+    lines(density(dataset),col="red",lwd=3)
+    legend("topright",bty="n",lty=1, col=c("red","blue"), 
+           legend = c("Population","50 draws"),cex=.75)
+
 #100 observations
-hist(sample_means[,3],freq=F,main="Means of 100 normal observations",xlab="mean")
-lines(density(sample_means[,3]),col="navy",lwd=3)
-lines(density(dataset),col="red",lwd=3)
+    hist(sample_means[,3],freq=F,main="Means of 100 normal observations",xlab="mean")
+    lines(density(sample_means[,3]),col="navy",lwd=3)
+    lines(density(dataset),col="red",lwd=3)
+    legend("topright",bty="n",lty=1, col=c("red","blue"), 
+           legend = c("Population","100 draws"),cex=.75)
+
 #200 observations
-hist(sample_means[,4],freq=F,main="Means of 200 normal observations",xlab="mean")
-lines(density(sample_means[,4]),col="navy",lwd=3)
-lines(density(dataset),col="red",lwd=3)
-par(mfrow=c(1,1))
+    hist(sample_means[,4],freq=F,main="Means of 200 normal observations",xlab="mean")
+    lines(density(sample_means[,4]),col="navy",lwd=3)
+    lines(density(dataset),col="red",lwd=3)
+    legend("topright",bty="n",lty=1, col=c("red","blue"), 
+           legend = c("Population","200 draws"),cex=.75)
 ```
 
-
-```{r}
+In each of these plots, the red line, the pdf for the dataset itself, is constant.  As the number of observations made increases, ie the more numbers we sample to calculate the mean increases, the curve not only becomes more normal-like, but the probability of the mean being around 0 increases.  In fact, since we are averaging the numbers (and therefore selecting more than one), the probability of finding a mean equal to 0 has surpassed the probability of finding a number equal to 0.
+```{r plot_rnormall}
 par(mfrow=c(1,1))
-hist(dataset,freq=F)
-lines(density(dataset),col=1)
+hist(dataset,freq=F,ylim=(c(0,2)),main="Dataset pdf vs Samples Means", xlab="Mean")
+lines(density(dataset),col=1,type="l")
 lines(density(sample_means[,1]),col=2,lwd=3)
 lines(density(sample_means[,2]),col=3,lwd=3)
 lines(density(sample_means[,3]),col=4,lwd=3)
 lines(density(sample_means[,4]),col=5,lwd=3)
+legend("topright",bty="n",lty=1, col=c(1:5), 
+       legend = c("Dataset","10 per sample","50 per sample","100 per sample","200 per sample"),cex=1)
 
 ```
-In each of these plots, the red line, the pdf for the dataset itself, is constant.  As the number of observations made increases, ie the more numbers we sample to calculate the mean increases, the curve not only becomes more normal-like, but the probability of the mean being around 0 increases.  In fact, since we are averaging the numbers (and therefore selecting more than one), the probability of finding a mean equal to 0 has surpassed the probability of finding a number equal to 0.
 
 
-c)  Suppose we now compare that with a uniformly-distributed dataset.  
-```{r echo=FALSE}
+
+
+c)  Suppose we now compare that with a uniformly-distributed dataset.    
+```{r unif_gen,echo=FALSE}
 set.seed(2102015)
-dataset2<-runif(1000,0,sqrt(10))
+dataset2<-runif(1000,-1,1)
 sample_means<-data.frame()
 for (i in 1:1000){
     s.10<-mean(sample(dataset2,10)) 
@@ -207,27 +233,39 @@ for (i in 1:1000){
     sample_means<-rbind(sample_means,s.all)
 }
 colnames(sample_means)<-c("10","50","100","200")
+```
+
+```{r plot_unif,echo=FALSE}
 
 par(mfrow=c(2,2))
 #10 observations
 hist(sample_means[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
 lines(density(sample_means[,1]),col="navy",lwd=3)
 lines(density(dataset2),col="red",lwd=3)
+legend("topright",bty="n",lty=1, col=c("red","blue"), 
+       legend = c("Population","10 draws"),cex=.75)
 #50 observations
 hist(sample_means[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
 lines(density(sample_means[,2]),col="navy",lwd=3)
 lines(density(dataset2),col="red",lwd=3)
+legend("topright",bty="n",lty=1, col=c("red","blue"), 
+       legend = c("Population","10 draws"),cex=.75)
 #100 observations
 hist(sample_means[,3],freq=F,main="Means of 100 uniform observations",xlab="mean")
 lines(density(sample_means[,3]),col="navy",lwd=3)
 lines(density(dataset2),col="red",lwd=3)
+legend("topright",bty="n",lty=1, col=c("red","blue"), 
+       legend = c("Population","10 draws"),cex=.75)
 #200 observations
 hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
 lines(density(sample_means[,4]),col="navy",lwd=3)
 lines(density(dataset2),col="red",lwd=3)
+legend("topright",bty="n",lty=1, col=c("red","blue"), 
+       legend = c("Population","10 draws"),cex=.75)
 par(mfrow=c(1,1))
 ```
-Here, even though the underlying dataset is clearly not normal, the distributation of the means of replicate samples is indeed normal.
+
+Here, even though the underlying dataset is clearly not normal, the distribution of the means of replicate samples is indeed normal.
 
 
 4.
