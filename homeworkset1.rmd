@@ -1,10 +1,13 @@
 ---
-title: "Homework #1"
+title: 'Homework #1'
 author: "Katie Daisey"
 date: "Friday, March 06, 2015"
-output: html_document
+output: word_document
 ---
 
+--- 
+
+---
 
 how much code does he want to see  
 how much explanation does he want  
@@ -18,7 +21,7 @@ library(knitr)
 library(lattice)
 ```
 
-##Question 1
+##Question 1 - T-tests
 Two analytical methods (XRF and ICP) were applied to random areas on the same semiconductor material with a trace sodium contaminant.  The following data was obtained:
 ```{r q1}
 xrf<-c(85.1, 81.4, 77.1, 84.5, 87.9, 83.2, 86.6, 83.9, 81.1, 80.8)
@@ -32,7 +35,9 @@ kable(data.2,row.names=T,caption="Na concentrations (ug/g)")
 
 
 
-a) Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), we calculate the t statistic for pooled variances t-Test via
+####a) Spots as Replicates
+
+Treating these methods as separate, but producing replicated results(ie. the variation between samples arising from chance), we calculate the t statistic for pooled variances t-Test via
 
 $$t=\frac{\bar x _{xrf}-\bar x _{icp}}{\sqrt{MSE}\sqrt{\frac{1}{n}+\frac{1}{n}}}$$
 where MSE equals
@@ -51,7 +56,9 @@ We cannot reject the null hypothesis (that the means of the two sets are equal) 
 
 
 
-b) If we instead treat the data as pairs of non-replicated samples, treating each spot as separate from the other locations and variation between methods arising from chance) we must use the paired t-Test.  The t statistic is calculated as:
+####b) Different Spots Teseted by 2 Methods
+
+If we instead treat the data as pairs of non-replicated samples, treating each spot as separate from the other locations and variation between methods arising from chance) we must use the paired t-Test.  The t statistic is calculated as:
 $$t = \frac{\bar x_{D}}{\sigma_{D} \sqrt{n}}$$
 where $\bar x_{D}$ and $\sigma _{D}$ is the mean of the differences between the pairs.  
 ```{r}
@@ -62,16 +69,24 @@ tstat2p<-tstat2[[3]]
 Since the calculated t statistic, `r round(tstat2[[1]],3)` and the p-value is `r round(tstat2[[3]],3)`, is above the c for 90% but below the c for 95%, we would reject the null hypothesis (that the results are distinguishable) at 90% confidence, but cannot at 95% confidence. Alternatively, the p-value, `r round(tstat2p,3)` is above $\alpha = 0.05$ for 95% confidence, but below the $\alpha = 0.10$ for 90% confidence.  Thus, the results are not distinguishable with 95% confidence but distinguishable with 90% confidence.
 
 
-c) The p value calculated by a t-test is the probability that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
+####c) P-values
 
-d) 95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  At times, a test result will fall into this zone where it would be accepted in the larger range (95% confidence) but not in the smaller range (90% confidence).
+The p value calculated by a t-test is the probability that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
 
-e) Statistical power, the probability of not falsely accepting the null hypothesis $1-\beta$,
+####d) Confidence Intervals
+
+95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  At times, a test result will fall into this zone where it would be accepted in the larger range (95% confidence) but not in the smaller range (90% confidence).
+
+####e) Statistical Power
+
+Statistical power, the probability of not falsely accepting the null hypothesis $1-\beta$,
 
 
 
+---
 
-##Question 2
+##Question 2 - Poisson Distributions
+
 Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
 ```{r gold, echo=FALSE, eval=TRUE}
 #poisson counting
@@ -86,7 +101,9 @@ kable(Freq,row.names=F,caption="Frequency of alpha particles")
 
 
 
-a) The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:  
+####a) Weighted Mean 
+
+The mean number of alpha particles emitted in the fixed time interval can be calculated by finding the weighted mean, ie multiplying each N value by the corresponding f value and dividing by the total number of observations:  
 ```{r poisson}
 
 particles<-num*freq
@@ -96,7 +113,9 @@ weighted_mean<-signif(total_particles/total_obs,3)
 ```
 giving a mean number of `r weighted_mean` particles per interval.
 
-b) A Poisson distribution is easily calculated in R using the `dpois` function with a specified lambda of `weighted_mean`.  The vertical axis (frequency) is normalized via the first element (number of no clusters emitted).
+####b) Calculated vs Actual Distribution
+
+A Poisson distribution is easily calculated in R using the `dpois` function with a specified lambda of `weighted_mean`.  The vertical axis (frequency) is normalized via the first element (number of no clusters emitted).
 
 ```{r gold_plot}
 plotpois<-cbind(num,dpois(num,weighted_mean))
@@ -110,11 +129,14 @@ plot(gold,main="Frequency of alpha particles ejected",ylab="Frequency",
            legend=c("Data cdf"   ,"Fitted cdf"),bty="n")
 ```
 
+---
 
-##Question 3
+##Question 3 - Randomness
 Looking a little closer at randomness
 
-a)  Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for applicability, the seed was set to 292015).   
+####a) Law of Large Numbers
+
+Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for applicability, the seed was set to 292015).   
 ```{r rnorm_a,}
 set.seed(292015)
 
@@ -127,16 +149,22 @@ set.seed(292015)
     mean.100<-mean(r.100)
     mean.1000<-mean(r.1000)
 #join in matrix
-    allmeans<-c(mean.10,mean.100,mean.1000)
-    std<-c(sd(r.10),sd(r.100),sd(r.1000))
-    table.3<-rbind(allmeans,std)
+    all_means<-c(mean.10,mean.100,mean.1000)
+    all_var<-c(var(r.10),var(r.100),var(r.1000))
+    table.3<-rbind(all_means,all_var)
     colnames(table.3)<-c(10,100,1000)
 
 table.3
 ```
-As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the population, but because the numbers are generated at random, they only have a probability of exactly mirroring the sample.  As the number of samples we generate increase, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
 
-b) The Central Limit Theorem, a related but separate theorem, states that the means of samples generated independently and randomly, *regardless of the probablity distribution used to generate them*, will approximate a normal distribution.  
+As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the population, but because the numbers are generated at random, they only have a probability of exactly mirroring the sample.  As the size of the samples we generate increases, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
+
+
+
+####b) Central Limit Theorem
+
+The Central Limit Theorem, a related but separate theorem, states that the means of samples generated independently and randomly, *regardless of the probablity distribution used to generate them*, will approximate a normal distribution.  
+
 For instance, say we have a normally-generated dataset of 1000 integers with a mean of 0 and a variance of 10 (`rnorm(1000,0,sqrt(10)`).  We then sample (without replacement) 10 observations from dataset 1000 times.  We do similarly for 50, 100, and 200 observations, calculating the mean for each sample.  
 ```{r rnorm_gen}
 set.seed(2102015)
@@ -168,41 +196,47 @@ rownames(var_sx)<-c("Mean","Var")
 kable(var_sx,row.names=T,caption="Various-sized Samples of 1000 random Numbers")
 ```
 
+Comparing the histogram and pdf for each set of sample means to the pdf for the original dataset shows interesting differences.
+
 
 ```{r plot_rnorm}
 #plots
+par(mfrow=c(1,1),mar=c(2,2,2,2))
 
-par(mfrow=c(2,2))
+m<-matrix(c(1,2,3,4,5,5),3,2,byrow=TRUE)
+layout(m,heights=c(.45,.45,.1))
+
 #10 observations
     hist(sample_means[,1],freq=F,main="Means of 10 normal observations",xlab="mean")
     lines(density(sample_means[,1]),col="navy",lwd=3)
     lines(density(dataset),col="red",lwd=3)
-    legend("topright",bty="n",lty=1, col=c("red","blue"), 
-           legend = c("Population","10 draws"),cex=.75)
 
 #50 observations
     hist(sample_means[,2],freq=F,main="Means of 50 normal observations",xlab="mean")
     lines(density(sample_means[,2]),col="navy",lwd=3)
     lines(density(dataset),col="red",lwd=3)
-    legend("topright",bty="n",lty=1, col=c("red","blue"), 
-           legend = c("Population","50 draws"),cex=.75)
 
 #100 observations
     hist(sample_means[,3],freq=F,main="Means of 100 normal observations",xlab="mean")
     lines(density(sample_means[,3]),col="navy",lwd=3)
     lines(density(dataset),col="red",lwd=3)
-    legend("topright",bty="n",lty=1, col=c("red","blue"), 
-           legend = c("Population","100 draws"),cex=.75)
 
 #200 observations
     hist(sample_means[,4],freq=F,main="Means of 200 normal observations",xlab="mean")
     lines(density(sample_means[,4]),col="navy",lwd=3)
     lines(density(dataset),col="red",lwd=3)
-    legend("topright",bty="n",lty=1, col=c("red","blue"), 
-           legend = c("Population","200 draws"),cex=.75)
+
+par(mar=c(0,0,0,0))
+plot(5, type = "n", axes=FALSE, xlab="", ylab="")
+legend("center",inset=0,legend=c("Population","Sample means"),col=c("red","blue"), lty=1, lwd=5,cex=1,horiz=T,bty="n")
 ```
 
+
+
 In each of these plots, the red line, the pdf for the dataset itself, is constant.  As the number of observations made increases, ie the more numbers we sample to calculate the mean increases, the curve not only becomes more normal-like, but the probability of the mean being around 0 increases.  In fact, since we are averaging the numbers (and therefore selecting more than one), the probability of finding a mean equal to 0 has surpassed the probability of finding a number equal to 0.
+
+It becomes much clear by plotting the various mean pdfs with the orignal dataset.
+
 ```{r plot_rnormall}
 par(mfrow=c(1,1))
 hist(dataset,freq=F,ylim=(c(0,2)),main="Dataset pdf vs Samples Means", xlab="Mean")
@@ -212,67 +246,94 @@ lines(density(sample_means[,2]),col=3,lwd=3)
 lines(density(sample_means[,3]),col=4,lwd=3)
 lines(density(sample_means[,4]),col=5,lwd=3)
 legend("topright",bty="n",lty=1, col=c(1:5), 
-       legend = c("Dataset","10 per sample","50 per sample","100 per sample","200 per sample"),cex=1)
-
+       legend = c("Dataset","10 draws","50 draws","100 draws","200 draws"),cex=1)
 ```
 
+With more draws being meaned (ie 200 vs 10), the pdf is more symmetric, more "gaussian-like", closer to being centered at the mean, and has a smaller variance, demonstrating the Central Limit Theorem.
 
 
 
-c)  Suppose we now compare that with a uniformly-distributed dataset.    
+
+
+####c) CLT with non-Gaussian data
+
+Suppose we now compare that with a uniformly-distributed dataset.    
 ```{r unif_gen,echo=FALSE}
-set.seed(2102015)
+set.seed(2802015)
 dataset2<-runif(1000,-1,1)
-sample_means<-data.frame()
+sample_meansu<-data.frame()
 for (i in 1:1000){
     s.10<-mean(sample(dataset2,10)) 
     s.50<-mean(sample(dataset2,50))
     s.100<-mean(sample(dataset2,100))
     s.200<-mean(sample(dataset2,200))
     s.all<-c(s.10,s.50,s.100,s.200)
-    sample_means<-rbind(sample_means,s.all)
+    sample_meansu<-rbind(sample_meansu,s.all)
 }
-colnames(sample_means)<-c("10","50","100","200")
+colnames(sample_meansu)<-c("10","50","100","200")
 ```
 
 ```{r plot_unif,echo=FALSE}
+#plots
+par(mfrow=c(1,1),mar=c(2,2,2,2))
+m<-matrix(c(1,2,3,4,5,5),3,2,byrow=TRUE)
+layout(m,heights=c(.45,.45,.1))
 
-par(mfrow=c(2,2))
 #10 observations
-hist(sample_means[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
-lines(density(sample_means[,1]),col="navy",lwd=3)
-lines(density(dataset2),col="red",lwd=3)
-legend("topright",bty="n",lty=1, col=c("red","blue"), 
-       legend = c("Population","10 draws"),cex=.75)
+    hist(sample_meansu[,1],freq=F,main="Means of 10 uniform observations",xlab="mean")
+    lines(density(sample_meansu[,1]),col="navy",lwd=3)
+    lines(density(dataset2),col="red",lwd=3)
+
 #50 observations
-hist(sample_means[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
-lines(density(sample_means[,2]),col="navy",lwd=3)
-lines(density(dataset2),col="red",lwd=3)
-legend("topright",bty="n",lty=1, col=c("red","blue"), 
-       legend = c("Population","10 draws"),cex=.75)
+    hist(sample_meansu[,2],freq=F,main="Means of 50 uniform observations",xlab="mean")
+    lines(density(sample_meansu[,2]),col="navy",lwd=3)
+    lines(density(dataset2),col="red",lwd=3)
+
 #100 observations
-hist(sample_means[,3],freq=F,main="Means of 100 uniform observations",xlab="mean")
-lines(density(sample_means[,3]),col="navy",lwd=3)
-lines(density(dataset2),col="red",lwd=3)
-legend("topright",bty="n",lty=1, col=c("red","blue"), 
-       legend = c("Population","10 draws"),cex=.75)
+    hist(sample_meansu[,3],freq=F,main="Means of 100 uniform observations",xlab="mean",ylim=(c(0,8)))
+    lines(density(sample_meansu[,3]),col="navy",lwd=3)
+    lines(density(dataset2),col="red",lwd=3)
+
 #200 observations
-hist(sample_means[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
-lines(density(sample_means[,4]),col="navy",lwd=3)
-lines(density(dataset2),col="red",lwd=3)
-legend("topright",bty="n",lty=1, col=c("red","blue"), 
-       legend = c("Population","10 draws"),cex=.75)
+    hist(sample_meansu[,4],freq=F,main="Means of 200 uniform observations",xlab="mean")
+    lines(density(sample_meansu[,4]),col="navy",lwd=3)
+    lines(density(dataset2),col="red",lwd=3)
+
+par(mar=c(0,0,0,0))
+plot(5, type = "n", axes=FALSE, xlab="", ylab="")
+legend("center",inset=0,legend=c("Population","Sample means"),col=c("red","blue"), lty=1, lwd=5,cex=1,horiz=T,bty="n")
+
+
 par(mfrow=c(1,1))
 ```
 
-Here, even though the underlying dataset is clearly not normal, the distribution of the means of replicate samples is indeed normal.
+```{r plot_runifall}
+par(mfrow=c(1,1))
+hist(dataset2,freq=F,ylim=(c(0,10)),main="Uniform Dataset pdf vs Samples Means", xlab="Mean")
+lines(density(dataset2),col=1,type="l")
+lines(density(sample_meansu[,1]),col=2,lwd=3)
+lines(density(sample_meansu[,2]),col=3,lwd=3)
+lines(density(sample_meansu[,3]),col=4,lwd=3)
+lines(density(sample_meansu[,4]),col=5,lwd=3)
+legend("topright",bty="n",lty=1, col=c(1:5), 
+       legend = c("Dataset","10 draws","50 draws","100 draws","200 draws"),cex=1)
+```
 
+Here, even though the underlying dataset is clearly not normal, the distribution of the means of replicate samples is indeed normal, an important distinction of the Central Limit Theorem.
 
-4.
+---
 
-5. A certain chemical analysis is performed with a known probability of error of 0.07.  The chemical analysis can be performed qualitatively, producing either a "positive" or a "negative" outcome.  The analysis is independently run in triplicate to produce one result, therefore even a single erroneous analysis will produce an erroneous result.
+##Question 4 - Extra Credit
 
-a) Probability density functions can be calculated for errors by calculating independently the probability that 0, 1, 2, and 3 analyses will be in error.  As the analyses are independent, the probabilities for each can be multiplied.  P(3), the probability that all 3 analyses will be in error is easily calculated as the cube of the error, 0.07.  
+---
+
+##Question 5 - Probability
+
+A certain chemical analysis is performed with a known probability of error of 0.07.  The chemical analysis can be performed qualitatively, producing either a "positive" or a "negative" outcome.  The analysis is independently run in triplicate to produce one result, therefore even a single erroneous analysis will produce an erroneous result.
+
+####a) PDF for errors
+
+Probability density functions can be calculated for errors by calculating independently the probability that 0, 1, 2, and 3 analyses will be in error.  As the analyses are independent, the probabilities for each can be multiplied.  P(3), the probability that all 3 analyses will be in error is easily calculated as the cube of the error, 0.07.  
 ```{r echo=1}
 P.3<-0.07*0.07*0.07
 P.3
@@ -299,7 +360,9 @@ P.total
 ```
 
 
-b) Now, knowing this, we decide to perform 3 additional analyses on those samples that test "positive" for an analyte (regardless of if it is erroneous or not), generating an additional result. Since the outcome of the analysis is independent from the reliability of the result, we can consider the two tests independent.  The probability that a single analysis will be erroneous is 1-P(0), thus the probability that both analyses will be erroneous is simply
+####b) Additional Test Probability 
+
+Now, knowing this, we decide to perform 3 additional analyses on those samples that test "positive" for an analyte (regardless of if it is erroneous or not), generating an additional result. Since the outcome of the analysis is independent from the reliability of the result, we can consider the two tests independent.  The probability that a single analysis will be erroneous is 1-P(0), thus the probability that both analyses will be erroneous is simply
 ```{r echo=1}
 P.both<-(1-P.0)*(1-P.0)
 P.both
