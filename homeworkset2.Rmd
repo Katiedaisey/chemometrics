@@ -1,0 +1,16 @@
+---
+title: 'Homework #2'
+author: "Katie Daisey"
+date: "Thursday, March 05, 2015"
+output: html_document
+---
+
+```{r echo=FALSE}
+library(knitr)
+```
+
+
+
+```{r}
+glucose<-read.csv("data/glucose.csv")
+```
