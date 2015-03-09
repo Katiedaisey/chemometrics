@@ -30,7 +30,7 @@ data.1<-cbind(xrf,icp)
 data.2<-rbind(xrf,icp)
 rownames(data.2)<-c("XRF","ICP")
 colnames(data.2)<-c(1:10)
-kable(data.2,row.names=T,caption="Na concentrations (ug/g)")
+kable(data.2,row.names=T, caption="Na concentrations ($\\mu$g/g)")
 ```
 
 
@@ -126,7 +126,7 @@ plot(gold,main="Frequency of alpha particles ejected",ylab="Frequency",
      xlab="Size of Cluster")
     points(plotpois,col=3)
     legend("topright",pch=1,col=c("black","green"),
-           legend=c("Data cdf"   ,"Fitted cdf"),bty="n")
+           legend=c("Data pdf"   ,"Fitted pdf"),bty="n")
 ```
 
 ---
@@ -235,7 +235,7 @@ legend("center",inset=0,legend=c("Population","Sample means"),col=c("red","blue"
 
 In each of these plots, the red line, the pdf for the dataset itself, is constant.  As the number of observations made increases, ie the more numbers we sample to calculate the mean increases, the curve not only becomes more normal-like, but the probability of the mean being around 0 increases.  In fact, since we are averaging the numbers (and therefore selecting more than one), the probability of finding a mean equal to 0 has surpassed the probability of finding a number equal to 0.
 
-It becomes much clear by plotting the various mean pdfs with the orignal dataset.
+It becomes much clear by plotting the various mean pdfs with the original dataset.
 
 ```{r plot_rnormall}
 par(mfrow=c(1,1))
@@ -249,7 +249,7 @@ legend("topright",bty="n",lty=1, col=c(1:5),
        legend = c("Dataset","10 draws","50 draws","100 draws","200 draws"),cex=1)
 ```
 
-With more draws being meaned (ie 200 vs 10), the pdf is more symmetric, more "gaussian-like", closer to being centered at the mean, and has a smaller variance, demonstrating the Central Limit Theorem.
+With more draws being averaged (ie 200 vs 10), the pdf is more symmetric, more "Gaussian-like", closer to being centered at the mean, and has a smaller variance, demonstrating the Central Limit Theorem.
 
 
 
@@ -257,7 +257,8 @@ With more draws being meaned (ie 200 vs 10), the pdf is more symmetric, more "ga
 
 ####c) CLT with non-Gaussian data
 
-Suppose we now compare that with a uniformly-distributed dataset.    
+Suppose we now compare that with a uniformly-distributed dataset of 1000 numbers from -1 to 1.
+
 ```{r unif_gen,echo=FALSE}
 set.seed(2802015)
 dataset2<-runif(1000,-1,1)
