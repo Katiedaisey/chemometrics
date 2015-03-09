@@ -7,6 +7,7 @@ output: html_document
 
 ```{r echo=FALSE}
 library(knitr)
+library(BlandAltmanLeh)
 ```
 
 
@@ -14,3 +15,154 @@ library(knitr)
 ```{r}
 glucose<-read.csv("data/glucose.csv")
 ```
+
+
+
+```{r}
+baplot <- function(x,y,xmeth=deparse(substitute(x)),ymeth=deparse(substitute(y))){
+  #adapted from Ken Kleinman 
+  #http://www.r-bloggers.com/example-9-34-bland-altman-type-plot/
+    #removed standardization and diff=0 line
+    #added regression line and title options
+
+  #xstd = (x - mean(x))/sd(x)
+  #ystd = (y - mean(y))/sd(y)
+  
+  #bamean = (xstdx+ystd)/2
+  #badiff = (ystd-xstd)
+
+  bamean = (x+y)/2
+  badiff = (y-x)
+  
+  plot(badiff~bamean, pch=20, xlab="mean", ylab="difference")
+# in the following, the deparse(substitute(varname)) is what retrieves the
+# name of the argument as data
+  title(main=paste("Bland-Altman plot of x and y\n",
+    xmeth, "and", ymeth
+    ), adj=".5")
+#construct the reference lines on the fly: no need to save the values in new 
+# variable names
+  abline(h = c( mean(badiff)+1.96 * sd(badiff),
+    mean(badiff)-1.96 * sd(badiff)), lty=2)
+
+#my addition - regression line 
+    abline(lm(badiff~bamean))
+
+} 
+
+
+```
+
+```{r}
+baplot(glucose$Venous_glucose,glucose$Sensor,"Venous Glucose","Sensor")
+```
+
+
+
+##2.Modeling Data
+
+####a) Linear Least Squares Model
+
+```{r}
+#concentrations were copied and pasted into .txt file
+#first line had spaces replaced by underscores
+
+#read data
+    conc<-read.table("data/conc.txt",header=T,sep=" ")
+    colnames(conc)<-c("Concentration","Absorbance")
+
+#use base least squares regression
+fit.linear<-lm(Absorbance~Concentration,conc)
+fit.linear
+plot(conc$Concentration,conc$Absorbance,
+     xlab=expression(paste("Concentration (",mu,"g/100mL)")),ylab="Absorbance",
+     main="Trace Cynaide in Waste Water")
+abline(lm(Absorbance~Concentration,conc),col="red",lty=2)
+
+```
+
+
+```{r}
+intercept<-fit.linear[[1]][[1]]
+slope<-fit.linear[[1]][[2]]
+
+
+pred.linear<-as.data.frame(matrix(seq(0,250,length.out=10000),ncol=1))
+pred.linear[,2]<-intercept+pred.linear[,1]*slope
+
+plot(pred.linear[,1],pred.linear[,2])
+
+```
+
+####b) Linear Least Squares Residuals
+
+```{r}
+s.fit.linear<-summary(fit.linear)
+#r squared value - standard
+
+round(s.fit.linear[[8]],4)
+round(s.fit.linear[[4]][[1]],5)
+round(s.fit.linear[[4]][[2]],5)
+
+```
+It appears that our linear least squares model fits the data well, but we can quantify this belief.
+
+The usual parameter is the $R^2$ value, here calculated as `r round(s.fit.linear[[8]],4)`.  Our line has a slope of `r round(s.fit.linear[[4]][[2]],5)` and an intercept of `r round(s.fit.linear[[4]][[2]],5)`.
+
+We can also look at the residuals directly. A least squares equation is found by minimizing the residuals (ie finding the line that is the closest to all the points) so the residuals should be small and randomly spread above and below the line.
+
+
+```{r}
+#find and plot residuals from the linear fit
+fit.linear.res<-resid(fit.linear)
+plot(conc[,1], fit.linear.res,  ylim=c(-0.020,0.020),
+     xlab=expression(paste("Concentration (",mu,"g/100mL)")),ylab="Residuals",
+     main="Residuals of Least Squares Fit\n of Absorbance on Concentration") 
+abline(0,0,col="red",lty=2)
+```
+
+Taking a look at this plot, the residuals are small, but the residuals tend to be positive in the middle concentrations and negative at high concentrations. This means our model under estimates absorbance in the middle concentrations and over estimates absorbance at high concentrations.
+
+
+####c) Quadratic Least Squares Model
+
+This curvature suggests we should investigate a quadratic model.
+
+```{r}
+#adding square term
+    conc[,3]<-(conc[,1]^2)
+    colnames(conc)<-c("Concentration","Absorbance","Conc_sq")
+
+fit.quad<-lm(Absorbance~(Concentration+Conc_sq),data=conc)
+intercept<-fit.quad[[1]][[1]]
+slope<-fit.quad[[1]][[2]]
+sq_term<-fit.quad[[1]][[3]]
+s.fit.quad<-summary(fit.quad)
+
+#calculate predicted values
+pred.quad<-as.data.frame(matrix(seq(0,250,length.out=10000),ncol=1))
+pred.quad[,2]<-c(0)
+pred.quad[,2]<-(intercept+pred.quad[,1]*slope + pred.quad[,1]*pred.quad[,1]*sq_term)
+
+
+plot(conc$Concentration,conc$Absorbance,
+     xlab=expression(paste("Concentration (",mu,"g/100mL)")),ylab="Absorbance",
+     main="Trace Cynaide in Waste Water")
+abline(lm(Absorbance~Concentration,conc),col="red",lty=2)
+points(pred.quad[,1],pred.quad[,2],type="l",col="blue",lty=1)
+legend("bottomright",bty="n",pch=c(1,NA,NA), lty=c(NA,2,1),
+       col=c("black","red","blue"), legend = c("Data","Linear","Quadratic"),cex=1)
+```
+
+The new $R^2$ value is `r round(s.fit.quad[[8]],4)` with our line having a slope of `r round(s.fit.quad[[4]][[2]],5)` and an intercept of `r round(s.fit.quad[[4]][[2]],5)`.
+
+While it's not immediately obvious that the lines are distinct, but it becomes clearer if we examine the residuals.
+
+```{r}
+fit.quad.res<-resid(fit.quad)
+plot(conc[,1], fit.quad.res,  ylim=c(-0.015,0.015),
+     xlab=expression(paste("Concentration (",mu,"g/100mL)")),ylab="Residuals",
+     main="Residuals of Least Squares Fit\n of Absorbance on Concentration") 
+abline(0,0,col="blue",lty=2)
+```
+
