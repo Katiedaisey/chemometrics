@@ -2,7 +2,7 @@
 title: 'Homework #1'
 author: "Katie Daisey"
 date: "Friday, March 06, 2015"
-output: word_document
+output: html_document
 ---
 
 --- 
