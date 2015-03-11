@@ -5,6 +5,8 @@ date: "Thursday, March 05, 2015"
 output: html_document
 ---
 
+1-standardized?
+
 ```{r echo=FALSE}
 library(knitr)
 library(BlandAltmanLeh)

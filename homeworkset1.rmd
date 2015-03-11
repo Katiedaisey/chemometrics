@@ -1,22 +1,14 @@
 ---
 title: 'Homework #1'
 author: "Katie Daisey"
-date: "Friday, March 06, 2015"
-output: html_document
+date: "Tuesday, March 10, 2015"
+output: word_document
 ---
 
 --- 
 
 ---
-
-how much code does he want to see  
-how much explanation does he want  
-1-e; var test?  
-3-b,c;check pdfs - think it might be okay, variance  
-4
-
-
-```{r echo=FALSE}
+```{r}
 library(knitr)
 library(lattice)
 ```
@@ -30,7 +22,7 @@ data.1<-cbind(xrf,icp)
 data.2<-rbind(xrf,icp)
 rownames(data.2)<-c("XRF","ICP")
 colnames(data.2)<-c(1:10)
-kable(data.2,row.names=T, caption="Na concentrations ($\\mu$g/g)")
+kable(data.2,row.names=T, caption="Na concentrations (*$\\mu$*g/g)")
 ```
 
 
@@ -56,7 +48,7 @@ We cannot reject the null hypothesis (that the means of the two sets are equal) 
 
 
 
-####b) Different Spots Teseted by 2 Methods
+####b) Different Spots Tested by 2 Methods
 
 If we instead treat the data as pairs of non-replicated samples, treating each spot as separate from the other locations and variation between methods arising from chance) we must use the paired t-Test.  The t statistic is calculated as:
 $$t = \frac{\bar x_{D}}{\sigma_{D} \sqrt{n}}$$
@@ -71,16 +63,33 @@ Since the calculated t statistic, `r round(tstat2[[1]],3)` and the p-value is `r
 
 ####c) P-values
 
-The p value calculated by a t-test is the probability that the null hypothesis has been falsely rejected.  So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
+The p value calculated by a t-test is the probability that the null hypothesis has been falsely rejected. So, for instance, a p-value of 0.09 would indicate there is a 0.09 probability that the null hypothesis is true, but we have mistakenly rejected it.
 
 ####d) Confidence Intervals
 
-95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  At times, a test result will fall into this zone where it would be accepted in the larger range (95% confidence) but not in the smaller range (90% confidence).
+95% confidence states that 95% of the ranges we calculate will contain the true statistic. We must then accept a broader range than we would need to contain the true statistic 90% of the time.  A higher confidence necessarily requires a smaller probability of falsely rejecting the null hypothesis ie. a smaller p-value. At times, a test result will fall into this zone where it would be accepted in the larger range (95% confidence) but not in the smaller range (90% confidence).
 
 ####e) Statistical Power
 
-Statistical power, the probability of not falsely accepting the null hypothesis $1-\beta$,
+Statistical power, the probability of not falsely accepting the null hypothesis ($1-\beta$), depends on the the variance of the sample; a higher variance producing a less powerful test.  
 
+```{r}
+
+(var.pooled<-var(xrf)/length(xrf) + var(icp)/length(icp))
+n.pooled<-10 #n in each group
+(var.paired<-var(xrf)+var(icp)-2*cov(xrf,icp)) #var of differences between pairs
+n.paired<-10 #number of pairs
+
+```
+Checking the variance of the two samples(pooled vs paired), originally you might suspect that the paired t-test has a much smaller power, but actually computing the power shows that both tests have the same power.
+
+```{r}
+
+(power.pooled<-power.t.test(n=n.pooled, delta=0, sd=sqrt(var.pooled), sig.level=0.05, power=NULL, type="two.sample", alternative="two.sided"))
+(power.paired<-power.t.test(n=n.paired, delta=0, sd=sqrt(var.paired), sig.level=0.05, power=NULL, type="paired", alternative="two.sided"))
+```
+
+Remember, the t-tests are testing different situations, but with the same dataset.
 
 
 ---
@@ -88,7 +97,7 @@ Statistical power, the probability of not falsely accepting the null hypothesis 
 ##Question 2 - Poisson Distributions
 
 Rutherford and Geiger (Phil. Mag. (1910)20, 698-707) counted alpha particles emitted by polonium using scintillation.  With N as the number of particles and f as the frequency N particles were observed during fixed time intervals, the following data was reported:
-```{r gold, echo=FALSE, eval=TRUE}
+```{r gold}
 #poisson counting
 num<-c(0:14)
 freq<-c(57,203,383,525,532,408,273,139,45,27,10,4,0,1,1)
@@ -132,11 +141,11 @@ plot(gold,main="Frequency of alpha particles ejected",ylab="Frequency",
 ---
 
 ##Question 3 - Randomness
-Looking a little closer at randomness
+
 
 ####a) Law of Large Numbers
 
-Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function (for applicability, the seed was set to 292015).   
+Several sets of random numbers (mean = 0, standard deviation = 1) were generated in R using the `rnorm` function.   
 ```{r rnorm_a,}
 set.seed(292015)
 
@@ -154,7 +163,7 @@ set.seed(292015)
     table.3<-rbind(all_means,all_var)
     colnames(table.3)<-c(10,100,1000)
 
-table.3
+kable(table.3)
 ```
 
 As the data was generated using the normal distribution, we expect the mean to be 0 and the standard deviation to be 1, but they are not.  These parameters do however become closer to expected as the number of samples increase.  The expected parameters belong to the population.  We hope that the sample reflects the population, but because the numbers are generated at random, they only have a probability of exactly mirroring the sample.  As the size of the samples we generate increases, the probability that the sample parameters equal the population parameters also increases.  To put simply, the more observations we make, the more likely the random noise cancels itself out.  This is the Law of Large Numbers.
@@ -185,7 +194,7 @@ sample_means<-data.frame()
 ```
 
 
-```{r rnorm_table,echo=FALSE}
+```{r rnorm_table}
 colnames(sample_means)<-c("10","50","100","200")
 a<-apply(sample_means,2,FUN=mean)
 b<-apply(sample_means,2,FUN=var)
@@ -259,7 +268,7 @@ With more draws being averaged (ie 200 vs 10), the pdf is more symmetric, more "
 
 Suppose we now compare that with a uniformly-distributed dataset of 1000 numbers from -1 to 1.
 
-```{r unif_gen,echo=FALSE}
+```{r unif_gen}
 set.seed(2802015)
 dataset2<-runif(1000,-1,1)
 sample_meansu<-data.frame()
@@ -274,7 +283,7 @@ for (i in 1:1000){
 colnames(sample_meansu)<-c("10","50","100","200")
 ```
 
-```{r plot_unif,echo=FALSE}
+```{r plot_unif}
 #plots
 par(mfrow=c(1,1),mar=c(2,2,2,2))
 m<-matrix(c(1,2,3,4,5,5),3,2,byrow=TRUE)
@@ -303,9 +312,6 @@ layout(m,heights=c(.45,.45,.1))
 par(mar=c(0,0,0,0))
 plot(5, type = "n", axes=FALSE, xlab="", ylab="")
 legend("center",inset=0,legend=c("Population","Sample means"),col=c("red","blue"), lty=1, lwd=5,cex=1,horiz=T,bty="n")
-
-
-par(mfrow=c(1,1))
 ```
 
 ```{r plot_runifall}
@@ -335,29 +341,24 @@ A certain chemical analysis is performed with a known probability of error of 0.
 ####a) PDF for errors
 
 Probability density functions can be calculated for errors by calculating independently the probability that 0, 1, 2, and 3 analyses will be in error.  As the analyses are independent, the probabilities for each can be multiplied.  P(3), the probability that all 3 analyses will be in error is easily calculated as the cube of the error, 0.07.  
-```{r echo=1}
-P.3<-0.07*0.07*0.07
-P.3
+```{r}
+(P.3<-0.07*0.07*0.07)
 ```
 The probability of none of the analyses being erroneous would be the probability of all the analyses being correct or (1-0.07) cubed.  
-```{r echo=1}
-P.0<-.93*.93*.93
-P.0
+```{r}
+(P.0<-.93*.93*.93)
 ```
 We then must consider P(1) and P(2), the probability of having only 1 and 2 erroneous analyses respectively.  This is a bit more difficult as we must consider the ways in which we can get *exactly* one erroneous test, but it is easily seen that there are only three ways to do so (TTE, TET, ETT). We can then calculated P(1) as the independent probabilities multiplied by the number of ways we can get those analyses.  
-```{r echo=1}
-P.1<-.07*.93*.93*3
-P.1
+```{r}
+(P.1<-.07*.93*.93*3)
 ```
 P(2) is calculated similarly.  
-```{r echo=1}
-P.2<-.07*.07*.93*3
-P.2
+```{r}
+(P.2<-.07*.07*.93*3)
 ```
 As a check, we can see that the sum of all possible outcomes equals 1.  
-```{r echo=1}
-P.total<-P.0+P.1+P.2+P.3
-P.total
+```{r}
+(P.total<-P.0+P.1+P.2+P.3)
 ```
 
 
@@ -365,8 +366,7 @@ P.total
 
 Now, knowing this, we decide to perform 3 additional analyses on those samples that test "positive" for an analyte (regardless of if it is erroneous or not), generating an additional result. Since the outcome of the analysis is independent from the reliability of the result, we can consider the two tests independent.  The probability that a single analysis will be erroneous is 1-P(0), thus the probability that both analyses will be erroneous is simply
 ```{r echo=1}
-P.both<-(1-P.0)*(1-P.0)
-P.both
+(P.both<-(1-P.0)*(1-P.0))
 ```
 
 Whether `r round(P.both,3)` is a small enough probability is not a statistical question.
