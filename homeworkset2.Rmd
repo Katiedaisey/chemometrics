@@ -134,7 +134,7 @@ plot(conc[,1], fit.linear.res,  ylim=c(-0.020,0.020),
 abline(0,0,col="red",lty=2)
 ```
 
-Taking a look at this plot, the residuals are small, but the residuals tend to be positive in the middle concentrations and negative at high concentrations. This means our model under estimates absorbance in the middle concentrations and over estimates absorbance at high concentrations.
+Taking a look at this plot, the residuals are small, but the residuals tend to be positive in the middle concentrations and negative at high concentrations. This means our model under estimates absorbance in the middle concentrations and over estimates absorbance at high concentrations.  There is signifigant lack of fit.
 
 
 ####c) Additional Terms
@@ -308,20 +308,110 @@ A common use for PCA is identification of samples via comparision to a known dat
 ####a) Load and Examine data
 ```{r}
 opt<-read.csv("data/homework2-3.csv")
-summary(opt)
 plot(opt)
-(apply(opt,2,var))
 ```
-Looking at the variance
+A quick look at the data reveals a strong correlation and separation in the P-variables.  Type would be excluded from the PCA. 
 
-####b) Exclude
+```{r}
+str(opt)
+summary(opt)
+(apply(opt[,3:9],2,var))
+```
+The data needs to be centered, but looking at the variance, I would argue it should not be scaled.
+
+####b) Exclude "Y" and Pre-process data
 ```{r}
 #split out "unknown/type-y data"
-opt2<-opt
+opt2<-opt[opt$Type != "Y",]
+opty<-opt[opt$Type == "Y",]
+
+opt3<-opt2[,3:9]
+opt3_means<-colMeans(opt3)
+opt3_var<-apply(opt3,2,var)
+opt3<-scale(opt3, scale=F)
 ```
 
+####c) Preform PCA. Plot scores and labels
+```{r}
+opt3_c_pc<-princomp(opt3,cor=T)
+plot(opt3_c_pc)
+
+variances <-opt3_c_pc$sdev^2/(nrow(opt3)-1)
+totvariances<- sum(variances)
+relvars<- variances/totvariances
+vars<- 100*round(relvars, digits=3)
 
 
+plot(opt3_c_pc$scores[,1],opt3_c_pc$scores[,2], col=as.factor(opt2$Type), xlab=paste("PC#1 - ",vars[1],"% of Variance"), ylab=paste("PC#2 - ",vars[2],"% of Variance"))
+abline(h=0, col="gray")
+abline(v=0, col="gray")
+text(opt3_c_pc$scores[,1],opt3_c_pc$scores[,2],labels=rownames(opt3),cex=.5, pos=3)
+legend("bottom",inset=0,legend=c("2305","2305a"),col=c("black","red"), pch=1,cex=1)
+```
+
+####d) Loadings
+```{r}
+plot(opt3_c_pc$loadings[,1],opt3_c_pc$loadings[,2])
+abline(h=0, col="gray")
+abline(v=0, col="gray")
+text(opt3_c_pc$loadings[,1],opt3_c_pc$loadings[,2],labels=colnames(opt3),cex=.5,pos=c(4,4,4,4,4,4,2))
+```
+Loadings which are different from 0, contribute to the differences in the filters.  If only one measurement could be taken, P3 would be optimal.  P7 contributes the least to the difference in filters along the first principal component, which explains an overwhelming amount (96%) of the variance.
+
+####e) Project Y samples onto PCA model
+
+We need to pre-process the "Y"-type filters identically to the known filters (using the same mean and variances for scaling as necessary).
+```{r project}
+opty<-opt[opt$Type=="Y",]
+scalec<-attributes(opt3)$"scaled:center"
+opty_c<-opty[,3:9]
+opty_c<-scale(opty_c,center=scalec,scale=F)
+```
+
+We then project the data onto the new principal component axes found with the known data using the loadings.
+
+```{r}
+newscores<-opty_c%*%opt3_c_pc$loadings
+```
+
+Finally we plot the new data as see which type it more closely resembles.
+```{r}
+plot(opt3_c_pc$scores[,1],opt3_c_pc$scores[,2], col=as.factor(opt2$Type), xlab=paste("PC#1 - ",vars[1],"% of Variance"), ylab=paste("PC#2 - ",vars[2],"% of Variance"))
+abline(h=0, col="gray")
+abline(v=0, col="gray")
+text(opt3_c_pc$scores[,1],opt3_c_pc$scores[,2],labels=rownames(opt3),cex=.5, pos=3)
+legend("bottom",inset=0,legend=c("2305","2305a","Y"),col=c("black","red","green"), pch=1,cex=1)
+points(newscores[,1],newscores[,2],col=3)
+```
+Here, the "Y"-type filters closely rersemble "2305"-type filters, but do seem to have slight differences, perhaps as a separate production run, however, they are clearly not "2305a"-type filters.
+
+
+##Question 5 - Determining differences between Fire Ants
+
+####a) Load and Preprocess Data
+```{r}
+ants<-read.csv("data/homework2-4.csv")
+summary(ants)
+```
+A quick look at the data shows the type of ant (Forager/Reserver) is located in column 1 and should be removed for PCA.
+
+```{r}
+ants2<-as.matrix(ants[,2:6])
+apply(ants2,2,var)
+```
+The variances are wide enough that autoscale may be appropriate.
+
+```{r}
+ants2_a<-scale(ants2)
+```
+
+####b) Distance between ants and centroid
+
+####c) Determine Malhalanobis Distances
+
+####d) Calculate Assignments using Distance
+
+####e) PCA
 
 ##References
 [1]: http://www.sciencedirect.com/science/article/pii/S0140673695917489 "JM Bland and DG Altman, Lancet (1995) 346(8982) 1085-1087" 
