@@ -11,6 +11,7 @@ output: html_document
 2-d - tests for randomness
 
 3 - measure variances for scaling
+5-remove outliers before data distance
 
 
 ```{r echo=FALSE}
@@ -412,6 +413,113 @@ ants2_a<-scale(ants2)
 ####d) Calculate Assignments using Distance
 
 ####e) PCA
+```{r}
+
+
+ants<-read.csv("data/homework2-4.csv")
+ants_forager<-ants[ants$Type=="Forager",2:6]
+ants_reserver<-ants[ants$Type=="Reserver",2:6]
+ants_forg_cent<-colMeans(ants_forager)
+ants_res_cent<-colMeans(ants_reserver)
+
+#it looks likely that there is an outlier
+plot(ants_forager[,1]~ants_forager[,2])
+points(ants_forg_cent[1],ants_forg_cent[2],col="red")
+
+
+plot(ants_reserver[,1]~ants_reserver[,2])
+points(ants_res_cent[1],ants_res_cent[2],col="red")
+
+
+
+#outlier identified and removed
+plot(ants[,2],ants[,3])
+text(ants[,2],ants[,3],labels=rownames(ants))
+ants_out<-ants[-1,]
+ants_forager<-ants_out[ants_out$Type=="Forager",2:6]
+ants_reserver<-ants_out[ants_out$Type=="Reserver",2:6]
+ants_forg_cent<-colMeans(ants_forager)
+ants_res_cent<-colMeans(ants_reserver)
+
+#now it's gone!
+plot(ants_forager[,1]~ants_forager[,3])
+points(ants_forg_cent[1],ants_forg_cent[3],col="red")
+
+
+plot(ants_reserver[,1]~ants_reserver[,2])
+points(ants_res_cent[1],ants_res_cent[2],col="red")
+
+
+
+e_dist<-function(point,y){
+    dist_vect<-NULL
+    for(i in 1:length(y[,1])){
+            a<-y[i,]-point
+            a<-a*a
+            a<-sqrt(sum(a))
+            dist_vect<-append(dist_vect,a)
+        }
+    dist_vect
+    }
+
+
+edist_for<-e_dist(ants_forg_cent, ants[,2:6])
+edist_res<-e_dist(ants_res_cent, ants[,2:6])
+
+plot(edist_for,edist_res,col=ants_out$Type)
+
+#dist calculates a distance matrix
+#if we want only the distances from a certain point
+#we can put that point in the first row to makes a (n+1 x p) matrix
+#and select only the first n distances calcualted
+ants2<-ants_out[,2:6]
+ants2<-rbind(ants_forg_cent,ants2)
+a<-length(ants_out[,1])
+b<-head(dist(ants2),a)
+
+ants2<-ants_out[,2:6]
+ants2<-rbind(ants_res_cent,ants2)
+a<-length(ants_out[,1])
+b<-head(dist(ants2),a)
+
+
+
+#mahalanobis distance
+#sqrt(x-u)Sx(x-u)
+ants2<-ants[,2:6]
+ants_cov<-cov(ants2)
+mdist_for<-mahalanobis(ants2,ants_forg_cent,ants_cov)
+mdist_res<-mahalanobis(ants2,ants_res_cent,ants_cov)
+
+plot(b,d,col=ants$Type)
+
+
+
+
+#for each distance type
+#chose smaller distance and assign that type
+#find percentage of true
+
+euc<-as.data.frame(cbind(ants$Type,edist_for,edist_res,2,0))
+colnames(euc)<-c("Type","edist_for","edist_res","Predict","Match")
+
+euc[edist_for<edist_res,4]<-1
+euc[euc$Type==euc$Predict,5]<-1
+summary(euc[,5])[4]
+
+plot(edist_for,edist_res,col=euc$Type,pch=euc$Predict,xlim=c(0,10),ylim=c(0,11))
+
+
+mah<-as.data.frame(cbind(ants$Type,mdist_for,mdist_res,2,0))
+colnames(mah)<-c("Type","mdist_for","mdist_res","Predict","Match")
+
+mah[mdist_for<mdist_res,4]<-1
+mah[mah$Type==mah$Predict,5]<-1
+summary(mah[,5])[4]
+
+plot(mdist_for,mdist_res,col=mah$Type,pch=mah$Predict,xlim=c(0,12),ylim=c(0,14))
+
+```
 
 ##References
 [1]: http://www.sciencedirect.com/science/article/pii/S0140673695917489 "JM Bland and DG Altman, Lancet (1995) 346(8982) 1085-1087" 
