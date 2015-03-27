@@ -43,4 +43,20 @@ afgc<-scale(fgc) # scale the model data
 scalef<- attributes(afgc)$"scaled:scale"
 scalec<-attributes(afgc)$"scaled:center"
 #and scale the unknown to the data in the PCA model
-afgu<-scale(fgu,center=scalec,scale=scalef
+afgu<-scale(fgu,center=scalec,scale=scalef)
+
+
+
+
+
+
+
+
+#NIPALS - localted in chemometrics
+pcnipals<- nipals(afg, a=3, it=50) # this only gives 3 PC axes
+summary(pcnipals) #T-scores, P-loadings
+plot(pcnipals$T[,1],pcnipals$T[,2],xlab="PC Score #1",ylab="PC Score #2",col=fglass[,10],main="NIPALS Scores Plot by Group")
+abline(h=0,col="gray"); abline(v=0,col="gray")
+plot(pcnipals$P[,1],pcnipals$P[,2],xlab="PC Loading #1",ylab="PC Loading #2",col="blue",main="NIPALS Loadings Plot by Variable")
+abline(h=0,col="gray"); abline(v=0,col="gray")
+text(pcnipals$P[,1],pcnipals$P[,2],label=colnames(fg), cex=0.6, pos=c(1,1,1,1,2,1,1,1))
