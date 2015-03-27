@@ -1,17 +1,15 @@
 ---
 title: 'Homework #2'
 author: "Katie Daisey"
-date: "Thursday, March 05, 2015"
+date: "Friday, March 27, 2015"
 output: word_document
 ---
 ```{r echo=FALSE}
 library(knitr)
 opts_chunk$set(fig.width=8,fig.height=6)
-library(scatterplot3d)
+library(scatterplot3d) #known warning
 ```
-
-2-d - tests for randomness
-
+---
 ---
 
 
@@ -66,7 +64,7 @@ Here we see that the majority of the readings fall within the 95% confidence int
 ##Question 2 - Modeling Data
 
 
-Measurements of the concentration and absorbance of trace cyanide in waste water samples was gathered by [Meier and Zeund][3] (3). 
+Measurements of the concentration and absorbance of trace cyanide in waste water samples was gathered by Meier and Zeund. 
 
 ####a) Linear Least-Squares Model
 
@@ -191,9 +189,29 @@ Our $R^2$ has increased, but more importantly a visual examination of our residu
 
 ####d) Testing Residuals
 
-Formally, we might like to describe the "randomness" of our residuals.
+Formally, we might like to describe the "randomness" of our residuals.  There are several tests
+
+
+
+We might also like to quantify the fit between two parameters (linear) and three parameters (quadratic).  We would use an F-test on the variance of the residuals from the two models. Here our null hypothesis is the two sets residuals are equally random, while our alternative hypothesis is that the quadratic model will have a smaller variance.
+
+$F= \frac{(RSS_0-RSS_1)/(p_1-p_0)}{RSS_1/(N-p_1-1)}$
+
 ```{r Ftest}
-Fstat<-var.test(conc[,1],resid(fit.linear))
+rss0<-s.fit.linear[[8]]
+rss1<-s.fit.quad[[8]]
+p1<-2
+p0<-1
+N<-length(conc[,1])
+(Fstat<-(((rss1-rss0)/(p1-p0))/((rss1)/(N-p1-1))))
+```
+With an F statistic of `r round(Fstat,4)`, we would reject the null hypothesis and conclude the quadratic model fits our data better than the linear model.
+
+Visually, this is seen in a comparision of our Normal Q-Q plots, where the dashed line is the expected value for random noise and the circles are our actual residuals from the plots.
+```{r}
+par(mfrow=c(1,2))
+plot(fit.linear, which=2)
+plot(fit.quad,   which=2)
 ```
 
 ---
@@ -676,6 +694,3 @@ text(ants_c_pc$loadings[,1],ants_c_pc$loadings[,3], labels=colnames(ants_out2), 
 [2]: http://www.r-bloggers.com/example-9-34-bland-altman-type-plot/ 
 "Kleinman, K. "Example 9.34: Bland-Altman type plot" June 5, 2012." 
 2. Kleinman, K. "Example 9.34: Bland-Altman type plot" June 5, 2012.  http://www.r-bloggers.com/example-9-34-bland-altman-type-plot/
-
-[3]:
-3. 
