@@ -246,6 +246,8 @@ When looking for trends, we wish to determine which elements are similar taking 
 To do so we use hierarchical cluster analysis, which groups closest neighbors together and keeps track at what distance the groups merged, with varying methods of determining distance between groups.  We also want to account for our variables having different units and therefore differing scales for means and spreads which will bias the distance measurements towards the larger valued variables.  We can center and scale the data to eliminate this bias (if desirable).
 
 ```{r}
+a<-elem
+elem<-elem[,-1]
 elem_c<-scale(elem, center=T, scale=F) #centered only
 elem_a<-scale(elem, center=T, scale=T) #centered and autoscaled
 #hcluster on c data complete & ward.D
@@ -302,7 +304,7 @@ vars<- 100*round(relvars, digits=3)
 plot(elem_a_pc$scores[,1],elem_a_pc$scores[,2],
      xlab=paste("PC#1(",vars[1],"%)", sep=" "),
      ylab=paste("PC#2(",vars[2],"%)",sep=" "),
-     main="Scores of Element Data",pch=elem$Group, col=elem$Group)
+     main="Scores of Element Data",pch=elem$Group, col=a$Group)
 abline(h=0, col="gray");abline(v=0, col="gray")
 text(elem_a_pc$scores[,1], elem_a_pc$scores[,2],labels=rownames(elem),cex=.5, pos=1)
 text(elem_a_pc$scores[10,1], elem_a_pc$scores[10,2],labels="F",cex=.5, pos=2)
@@ -313,10 +315,10 @@ Looking at the first two principal components, we see good separation by group w
 
 ```{r}
 plot(elem_a_pc$loadings[,1],elem_a_pc$loadings[,2],
-     main="Loadings of Element Data",pch=elem$Group, col=elem$Group,xlim=c(-0.52,-.11),
+     main="Loadings of Element Data",pch=elem$Group, col=a$Group,
      xlab="Loadings #1",ylab="Loadings #2")
 abline(h=0, col="gray");abline(v=0, col="gray")
-text(elem_a_pc$loadings[,1], elem_a_pc$loadings[,2],labels=colnames(elem),cex=.5, pos=c(1,1,3,1,4,2))
+text(elem_a_pc$loadings[,1], elem_a_pc$loadings[,2],labels=colnames(elem),cex=.5, pos=c(2,1,3,2,4,2))
 ```
 
 A vast majority of the variance is represented by component 1, but we also see that boiling point, melting point, and oxidation number group noticed in the earlier scatterplot.
@@ -373,17 +375,15 @@ plot(5, type = "n", axes=FALSE, xlab="", ylab="")
 text(5,labels="Loadings of Element Data without Electronegativity",cex=1.7)
 par(mar=c(5,4,1,2)+.1)
 plot(elem2_a_pc$loadings[,1],elem2_a_pc$loadings[,2],
-     pch=elem$Group, col=elem$Group,
      xlab="Loadings #1", ylab="Loadings #2")
 abline(h=0, col="gray");abline(v=0, col="gray")
 text(elem2_a_pc$loadings[,1], elem2_a_pc$loadings[,2],labels=colnames(elem2),cex=.75, 
-     pos=c(2,4,4,4,4))
+     pos=c(2,2,2,2,4))
 plot(elem2_a_pc$loadings[,1],elem2_a_pc$loadings[,3],
-     pch=elem$Group, col=elem$Group,
      xlab="Loadings #1", ylab="Loadings #2")
 abline(h=0, col="gray");abline(v=0, col="gray")
 text(elem2_a_pc$loadings[,1], elem2_a_pc$loadings[,3],labels=colnames(elem2),cex=.75, 
-     pos=c(2,4,4,4,4))
+     pos=c(2,2,2,2,4))
 ```
 
 ---
@@ -415,7 +415,7 @@ opty<-opt[opt$Type == "Y",]
 opt3<-opt2[,3:9]
 opt3_means<-colMeans(opt3)
 opt3_var<-apply(opt3,2,var)
-opt3<-scale(opt3, scale=F)
+opt3<-scale(opt3, scale=T)
 ```
 The data was split into known and unknown filters.  Type was excluded as we do not wish to bias the PCA.  No was also excluded since this is highly correlated with Type (possibly lot numbers). The data was mean-centered only, not scaled.
 
@@ -562,6 +562,7 @@ e_dist<-function(point,y){
 #run function
 edist_for<-e_dist(ants_forg_cent, ants_out2)
 edist_res<-e_dist(ants_res_cent, ants_out2)
+
 
 par(mfrow=c(1,1))
 plot(edist_for,edist_res,col=ants_out$Type, main="Euclidean Distance from Centroids", xlab="Distance from Forager Centroid", ylab="Distance from Reserver Centroid")

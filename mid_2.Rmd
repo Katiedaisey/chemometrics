@@ -1,0 +1,358 @@
+---
+title: "Chemometrics Midterm"
+author: "Katie Daisey"
+date: "Wednesday, April 15, 2015"
+output: word_document
+---
+
+```{r}
+library(knitr)
+opts_chunk$set(fig.pos="center")
+```
+
+1a - assign spectra?
+1c - offset?
+1e
+
+---
+
+---
+
+##Question 1 - Multivariate Calibration
+
+Here we wish to examine spectral data of several mixtures with 4 components (acetone, i-propyl alcholo, water, and t-butyl alcohol).  The data also consists of a calibration set of 24 mixtures and a prediction set of 12 mixtures.
+```{r}
+data<-read.csv("data/shootout2.csv")
+cal<-data[1:24,]
+pred<-data[25:36,]
+```
+
+There is a known mistake in the acetone concentration of sample 13.  It should read 60, not 6.
+
+```{r}
+cal[13,248]<-60
+```
+
+
+####a) CLS Regression
+
+We wish to do a simple classical least-squares regression on the calibration data. First we must separate the spectral information from the mixture composition.  We can also take a quick look at the spectra themselves.
+
+```{r}
+calspec<-as.matrix(cal[,2:247],ncol=246) #conversion necessary for future code
+calconc<-as.matrix(cal[,248:251],ncol=4) #conversion necessary for future code
+
+wavelengths<-seq(1225,2450,length.out=246)
+matplot(wavelengths,t(calspec),type="l", main="Calibration Set", ylab="Response", lty=1)
+```
+
+We use matrix algebra ($(X^{T}X)^{-1}X$) to calculate the coefficients for each variable (here - component) and multiply that by the spectra to extract the spectra of the pure components.
+
+```{r}
+rcond(t(calconc)%*%calconc)
+kmat<-solve(t(calconc)%*%calconc)%*%t(calconc)%*%calspec
+matplot(wavelengths,t(kmat),type="l", main="Components - Calibration Set", ylab="Response", lty=1, col=2:5)
+```
+
+First, we see a low reciprocal condition number which means the regular matrix is ill-conditioned and suspectible to small changes in values.  However, the reciprocal number could be much lower, and this is the only data we have, we should just remember our predicted concentrations may not be very precise.  We might also consider trying indirect least squares.
+
+####b) Selection of peaks for ILS
+
+ILS requires variables less than or equal to the rank of the matrix (the smaller of n and p in an n x p matrix).  We select 10 wavelengths which we beleive to best separate the four components.
+
+```{r}
+pick<-c(6,46,64,95,138,170,179,212,221,242)
+matplot(1:246,t(kmat),type="l", main="Components - Calibration Set", ylab="Response",xlab="channel", lty=1, col=2:5)
+abline(v=pick)
+calpick<-calspec[,pick]
+rcond(t(calpick)%*%calpick)
+```
+
+####c) Offset for CLS
+
+Using Classical Least Squares we can calculate the square root of the sum of the residuals between our predicted concentrations and our actual concentrations for each component.
+
+```{r}
+rcond(kmat%*%t(kmat))
+predspec<-as.matrix(pred[,2:247],ncol=246)
+predconc<-as.matrix(pred[,248:251],ncol=4)
+kmat_predconc<- predspec%*%t(kmat)%*%solve(kmat%*%t(kmat))
+
+rownames(predconc)<-1:12
+plot(predconc,predconc-kmat_predconc,xlab="Concentration",ylab="Residuals",
+     main="Residuals from CLS Calibration of NIR Data",
+     pch=rep(1:4,each=12), col=rownames(predconc))
+abline(h=0)
+legend("bottomright", c("acetone", "i-propyl alcohol", "water", "t-butyl alcohol"), pch=1:4, bty='n')
+```
+
+Here we see a plot of the residuals versus actual concentration with each sample having a different color and each component sharing a symbol
+
+
+```{r}
+(cls_rmsep<-sqrt(apply(((predconc-kmat_predconc)^2),2,mean))) # RMSEP
+```
+
+The RMSEPs for our classical least-squares model are `r round(cls_rmsep,5)` respectively.
+
+####d) ILS
+
+
+```{r}
+predpick<-predspec[,pick]
+
+#create model
+kmatils<-solve(t(calpick)%*%calpick)%*%t(calpick)%*%calconc
+
+#project unknowns into model
+predils<-predpick%*%kmatils
+
+#plot residuals from known concentrations
+plot(predconc,predconc-predils, main="Model Error", xlab="Concentration", ylab="Residuals")
+abline(h=0)
+pred<-matrix(0,nrow=12,ncol=4)
+for(i in 1:4){
+a<-solve(t(predpick)%*%predpick)%*%t(predpick)%*%predconc[,i]
+pred[,i]<-predpick%*%a
+}
+colnames(pred)<-1:4
+plot(predconc,predconc-pred,col=colnames(pred),main="Model Error", xlab="Concentration", ylab="Residuals")
+abline(h=0)
+```
+
+
+####e) CLS versus ILS
+
+```{r}
+(ils_rmsep<-sqrt(apply((predconc-pred)^2,2,mean)))
+cls_rmsep
+```
+
+Comparing the root mean squared residuals we would say that CLS preforms better than ILS, however ILS is much less intensive to run.  
+
+
+
+---
+
+##Question 2 - Provenance of Archaeological Artifiacts
+
+Here we are exploring obsidian arrowheads believed to be mined from four possible quarries in Mexico.  10 elemental components of 63 arrowheads of known origin were measured using neutron activation analysis.  Additionally, 12 arrowheads of unknown origin were also measured.
+
+
+```{r}
+data<-read.csv("data/arrows.csv")
+str(data)
+data2<-data
+
+#12 unknowns located last
+ukn<-data[64:75,]
+data<-data[-(64:75),]
+
+#property information (sampleID, Class, Quarry) in first 3 columns
+prop<-data[,1:3]
+data<-as.matrix(data[,-(1:3)],ncol=10)
+ukn_prop<-ukn[,1:3]
+ukn_data<-as.matrix(ukn[,-(1:3)],nrow=12)
+
+par(mfrow=c(1,1))
+boxplot(data)
+```
+
+A boxplot of the data shows a wide spread in the values for the different elements as well as vastly differing variances.  Auto-scaling this data will probably be necessary.
+
+```{r}
+plot(as.data.frame(data))
+```
+
+Plotting the elements against each other show several loose correlations, for instance between K and Rb suggesting there may be replicate information.  We also see several distinct groups separated by only two elements.  
+
+```{r}
+pca<-princomp(data)
+plot(pca, main="Principal Components")
+```
+
+Doing a quick pca on the data, we find 3 principal components.
+
+```{r}
+plot(pca$scores[,1],pca$scores[,2],col=prop[,3],ylim=c(-350,200),
+     xlab="PC #1", ylab="PC #2", main="PCA of Unscaled Data")
+text(pca$scores[,1],pca$scores[,2],labels=prop[,1],cex=.5,pos=1)
+legend("bottomright",col=1:4,pch=1,c("AN", "BL", "K", "SH"),bty='n',y.intersp=.5)
+
+plot(pca$scores[,2],pca$scores[,3],col=prop[,3],ylim=c(-130,100),
+     xlab="PC #2", ylab="PC #3", main="PCA of Unscaled Data")
+text(pca$scores[,2],pca$scores[,3],labels=prop[,1],cex=.5,pos=1)
+legend("bottomright",col=1:4,pch=1,c("AN", "BL", "K", "SH"),bty='n',y.intersp=.5)
+```
+
+The first two components creates tight clusters for AN, SH, and K samples (with the exception of SHV24), however the BL samples are more widespread and do not separate from the K samples.  The K and BL samples do separate cleanly with the addition of the third principal component.
+
+
+```{r}
+par(mfrow=c(1,2))
+plot(pca$loadings[,1],pca$loadings[,2], xlab="PC1 - 82.9%", ylab="PC2 - 15.2%", main="Loadings of PCA - Unscaled Data")
+text(pca$loadings[,1],pca$loadings[,2],labels=colnames(data))
+abline(h=0,v=0)
+
+plot(pca$loadings[,2],pca$loadings[,3], xlab="PC1 - 82.9%", ylab="PC3 - 1.01%", main="Loadings of PCA - Unscaled Data")
+text(pca$loadings[,2],pca$loadings[,3],labels=colnames(data))
+abline(h=0,v=0)
+```
+
+We see that Fe and Ca contribute the most to PC1 which contains the vast majority of the variance.  Ti contributes the most to PC3 which is necessary to separate the BL and K groups.
+
+
+
+####b) Auto-scaled Data
+
+As mentioned after the boxplot, we may wish to autoscale the data.
+
+```{r}
+data_a<-scale(data)
+center<-attributes(data_a)[[3]]
+scale<-attributes(data_a)[[4]]
+pcaa<-princomp(data_a)
+par(mfrow=c(1,1))
+plot(pcaa)
+```
+
+```{r}
+plot(pcaa$scores[,1],pcaa$scores[,2],col=prop[,3],
+     xlab="PC #1", ylab="PC #2", main="PCA of Autoscaled Data")
+text(pcaa$scores[,1],pcaa$scores[,2],labels=prop[,1],cex=.5,pos=1)
+legend("bottomleft",col=1:4,pch=1,c("AN", "BL", "K", "SH"),bty='n',y.intersp=.5)
+```
+
+With the auto-scaled data we see clear separation of all the groups with only the first two components.  We still see a wide spread in the BL group.
+
+```{r}
+plot(pcaa$loadings[,1],pcaa$loadings[,2],
+     xlab="PC #1", ylab="PC #2", main="Loadings of PCA - Autoscaled Data")
+abline(v=0,h=0)
+text(pcaa$loadings[,1],pcaa$loadings[,2],labels=colnames(data_a))
+```
+
+Now Fe seems to play a smaller role, while several elements (Zr, Rb, K, Ca, Sr, Ti) have a large effect on the principal components.  It is likely some of these elements contain replicated data, especially considering the strong correlation we saw earlier between Rb and K.
+
+
+c) Hierarchical Clustering
+
+We also wish to hierarchically cluster the arrows to see if four distinct groups form.
+
+
+```{r}
+hc1<-hclust(dist(data_a),"ward.D")
+plot(hc1, labels=prop[,1],cex=.8)
+```
+
+With auto-scaled data and using Ward's method we do see clean separation of the quarries.
+
+
+####d) Projection of unknown samples into PCA and Clustering
+
+Now that we have created models which separate our known samples, we wish to project our unknown samples into these models.
+
+#####1)PCA - unscaled
+
+Since the original PCA did not scale or center the data, the unknown samples can be projected simply by multiplying by the loadings (and centering with the center from the known data pca).
+
+```{r}
+test<-scale(data%*%pca$loadings,scale=F)
+ukn_pca<-ukn_data%*%pca$loadings
+ukn_pca<-scale(ukn_pca,center=attributes(test)$'scaled:center',scale=F)
+
+plot(pca$scores[,1],pca$scores[,2],col=prop[,3],xlim=c(-600,600),ylim=c(-370,200),
+     xlab="Pc #1", ylab="PC #2", main="Projection of Unknown Samples")
+points(ukn_pca[,1],ukn_pca[,2],col=5,pch=17)
+text(ukn_pca[,1],ukn_pca[,2],pch=17, labels=ukn_prop[,1],cex=.8,pos=1)
+legend("right",col=1:5,pch=c(1,1,1,1,17),c("AN", "BL", "K", "SH","unknown"),bty='n',y.intersp=.5)
+
+plot(pca$scores[,2],pca$scores[,3],col=prop[,3],xlim=c(-370,200),ylim=c(-125,100),
+     xlab="Pc #2", ylab="PC #3", main="Projection of Unknown Samples")
+points(ukn_pca[,2],ukn_pca[,3],col=5,pch=17)
+text(ukn_pca[,2],ukn_pca[,3],pch=17, labels=ukn_prop[,1],cex=.8,pos=1)
+legend("left",col=1:5,pch=c(1,1,1,1,17),c("AN", "BL", "K", "SH","unknown"),bty='n',y.intersp=.5)
+```
+
+With the unscaled data we find 5 samples (s8,s9,s10,s11,s12) which would be assigned to the SH quarry.  Using PC3 we would separate 2 samples (s2,s3) as from the K quarry and 5 samples (s1,s4,s5,s6,s7) as from the BL quarry.
+
+```{r}
+assignpca<-c("BL","K","K","BL","BL","BL","BL","SH","SH","SH","SH","SH")
+```
+
+#####2.) Auto-scaled PCA
+
+We should hopefully observe the same assignments using autoscaled data.
+
+```{r}
+ukn_data_a<-scale(ukn_data,center,scale)
+ukn_pcaa<-ukn_data_a%*%pcaa$loadings
+
+plot(pcaa$scores[,1],pcaa$scores[,2],col=prop[,3],ylim=c(-4,2.5),
+     xlab="Pc #1", ylab="PC #2", main="Projection of Unknown Samples")
+points(ukn_pcaa[,1],ukn_pcaa[,2],col=5,pch=17)
+text(ukn_pcaa[,1],ukn_pcaa[,2],labels=ukn_prop[,1],cex=.5,pos=1)
+legend("bottomleft",col=1:5,pch=c(1,1,1,1,17),c("AN", "BL", "K", "SH","unknown"),bty='n',y.intersp=.5)
+
+plot(pcaa$scores[,2],pcaa$scores[,3],col=prop[,3],ylim=c(-4,2.5),
+     xlab="Pc #2", ylab="PC #3", main="Projection of Unknown Samples")
+points(ukn_pcaa[,2],ukn_pcaa[,3],col=5,pch=17)
+text(ukn_pcaa[,2],ukn_pcaa[,3],labels=ukn_prop[,1],cex=.5,pos=1)
+legend("bottomleft",col=1:5,pch=c(1,1,1,1,17),c("AN", "BL", "K", "SH","unknown"),bty='n',y.intersp=.5)
+```
+
+We would again assign 5 samples to SH with the exception of (s8, s9, s10, s11, and s12).  3 samples (s5, s6, and s7) would be assigned to BL while only 1 sample (s2) would clearly be assigned to K.  3 samples would not be clearly assigned (s1 - likely SH, s3 and s4 - either K or BL).
+
+```{r}
+assignpcaa<-c("u","K","u","u","BL","BL","BL","SH","SH","SH","SH","SH")
+```
+
+No samples have been assigned to different groups than the unscaled data, but several points have not been assigned at all.
+
+#####3.) Hierarchical Clustering
+
+```{r}
+par(mfrow=c(1,1))
+data3<-rbind(data,ukn_data)
+data3<-scale(data3,center,scale)
+prop3<-rbind(prop,ukn_prop)
+h2<-hclust(dist(data3),"ward.D")
+plot(h2, label=prop3[,1],cex=.8)
+```
+
+```{r}
+assignhc<-c("SH","K","K","K","BL","BL","BL","SH","SH","SH","SH","SH")
+assign<-cbind(1:12,assignpca,assignpcaa,assignhc)
+colnames(assign)<-c("Sample ","PCA ","Auto-scaled_PCA ","Hierarchical_clustering ")
+kable(assign)
+```
+
+Based on our mis-match between our methods, we would be wary of assigning samples 1 and 4 definitively.
+
+####e) K-means Clustering
+
+While we can visually separate the groups, are we also able to do so mathematically using k-means?
+
+```{r}
+kma<-kmeans(data3,4,nstart=50)
+scores<-rbind(pcaa$scores,ukn_pcaa)
+
+plot(scores[,1],scores[,2],col=0, xlab="Pc #1", ylab="PC #2", main="K-means Unknown Projection - Unscaled Data")
+text(scores[,1],scores[,2],col=kma$cluster,labels=prop3[,3])
+```
+
+Using the auto-scaled data and searching for the expected 4 groups, we find perfect agreement between the known quarry and assign group by k-means.
+
+```{r}
+kma2<-kmeans(data3,5,nstart=50)
+plot(scores[,1],scores[,2],col=0, xlab="Pc #1", ylab="PC #2", main="K-means Unknown Projection - Unscaled Data")
+text(scores[,1],scores[,2],labels=prop3[,3],col=kma2$cluster)
+```
+
+Interestingly, searching for 5 groups splits the AN group rather than the BL group.  This is also seen in the hierarchical clustering.  Since it is based on the auto-scaled data, it agrees with the auto-scaled pca and hierarchical clustering.  It less closely agrees with the unscaled data .
+
+```{r}
+pairs(data,col=kma$cluster)
+```
+
+We can once again examine all the data but with the points colored according to groups.

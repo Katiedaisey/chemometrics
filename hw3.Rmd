@@ -1,0 +1,213 @@
+---
+title: "Homework #3"
+author: "Katie Daisey"
+date: "Tuesday, April 21, 2015"
+output: html_document
+---
+
+1a - error, why not standardization
+2a - comment on attributes loadings
+2b - access to RMSECV
+
+```{r}
+library(Matrix)
+```
+##Question 1 - Partial Least-Squares
+
+####a) Cross-Validated PLS-1
+
+The data was loaded, split into observations and responses and then standardized.
+```{r}
+data1<-read.csv("data/HW_3-1.csv")
+obs<-as.matrix(data1[,-c(1,2,9,10)],nrow=13)
+resp<-as.matrix(data1[,2],ncol=1)
+obss<-scale(obs, scale=T)
+
+matplot(obss,type="l")
+points(1:13,resp,type="l")
+
+#pls regression - cross-validated leave one out
+reg1<-plsr(resp~obss,ncomp=6,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
+summary(reg1)
+plot(reg1, "val", val.type="MSEP",estimate="CV", main="PLS, Scaled", col="red")
+```
+
+Doing a partial least-squares regression using leave one out cross validation ("LOO"), we see a minimum RMSEP of cross validation with 2 components. We would exp
+
+
+####b) PLS with 2 Components
+
+Let's build a PLS model with only the appropriate number of components (ie 2).
+
+```{r}
+reg2<-plsr(resp~obss,ncomp=2,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
+summary(reg2)
+#plot leverage vs studentized residuals
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(reg2, "val", val.type="MSEP",estimate="CV", main="PLS, Scaled", col="red")
+plot(reg2,"loadings", comps=1:6, main="PLS Loadings, Scaled")
+plot(reg2,"scores", main="PLS Scores, Scaled", col="blue")
+yfitted1<-reg1$fitted.values[,,2]
+yfitted2<- reg2$fitted.values[,,2]
+plot(yfitted1 ~ resp, xlab="Measured Level",ylab="Predicted Level", main="PLS Regression- Scaled",col="blue")
+points(yfitted2 ~ resp,col="red")
+points(yfitted3~resp,col="green")
+abline(0,1,col="red")
+```
+
+
+```{r}
+par(mfrow=c(1,1),mar=c(2,2,2,2))
+m<-matrix(c(1,2,3,3),2,2,byrow=TRUE)
+layout(m,heights=c(.5,.5))
+
+reg3<-plsr(resp~obs,ncomp=6,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
+yfitted3<- reg3$fitted.values[,,2]
+
+matplot(1:13,resp,type="l",ylab="Level",xlab="Index",main="PLS Regression- Scaled")
+matpoints(1:13,yfitted1,type="p",col="red",pch=1)
+matpoints(1:13,yfitted2,type="p",col="blue", pch=1)
+matpoints(1:13,yfitted3,type="p",col="green", pch=1)
+matplot(1:13,reg2$residuals[,,6],type="l",ylab="Residuals",col="blue",xlab="Index",main="PLS Regression- Scaled")
+abline(h=0, col="gray")
+plot(reg2$coefficients[,,6]~seq(1:6),type="b",xlab="Variable No.", ylab="Coefficient", main="PLS Regression, Scaled",col="red")
+abline(h=0, col="gray")
+```
+
+
+
+
+
+
+##Question 2 - PCA and PLS
+
+Here we examine data on 8 types of cocoa with several assessments of various qualities as rated by experts.
+
+
+####a) PCA
+
+
+```{r}
+data2<-read.csv("data/HW_3-2.csv")
+prop<-as.matrix(data2[,2:4],ncol=3)
+attr<-as.matrix(data2[,5:10],ncol=6)
+
+
+prop_s<-scale(prop)
+attr_s<-scale(attr)
+pca_prop_s<-prcomp(prop_s, center=F, scale=F)
+pca_attr_s<-prcomp(attr_s, center=F, scale=F)
+```
+
+```{r}
+#PCA - scaled
+par(mfrow=c(2,2))
+
+#scores
+plot(prop_s%*%pca_prop_s$rotation[,1:2], xlab=paste0("PC # 1 - ", 100*summary(pca_prop_s)[[6]][[2]],"%"), ylab=paste0("PC # 2 - ", 100*summary(pca_prop_s)[[6]][[5]],"%"), main="PCA of Cocoa Composition - Scaled",col=0,ylim=c(-2,2.5),xlim=c(-2,2))
+text(prop_s%*%pca_prop_s$rotation[,1:2], labels=1:8)
+plot(attr_s%*%pca_attr_s$rotation[,1:2], xlab=paste0("PC # 1 - ", 100*summary(pca_attr_s)[[6]][[2]],"%"), ylab=paste0("PC # 2 - ", 100*summary(pca_attr_s)[[6]][[5]],"%"), main="PCA of Cocoa Attributes - Scaled",col=0, ylim=c(-2,2.5),xlim=c(-2,2))
+text(prop_s%*%pca_prop_s$rotation[,1:2], labels=1:8)
+
+#loadings
+plot(pca_prop_s$rotation[,1:2], xlab=paste0("PC # 1 - ", 100*summary(pca_prop_s)[[6]][[2]],"%"), ylab=paste0("PC # 2 - ", 100*summary(pca_prop_s)[[6]][[5]],"%"), main="PCA of Cocoa Composition - Scaled",xlim=c(-.8,.8),ylim=c(-.5,.8))
+abline(v=0,h=0,col="grey")
+text(pca_prop_s$rotation[,1:2], labels=colnames(prop),pos=c(1,4,2))
+
+plot(pca_attr_s$rotation[,1:2], xlab=paste0("PC # 1 - ", 100*summary(pca_attr_s)[[6]][[2]],"%"), ylab=paste0("PC # 2 - ", 100*summary(pca_attr_s)[[6]][[5]],"%"), main="PCA of Cocoa Attributes - Scaled")
+abline(v=0,h=0,col="grey")
+text(pca_attr_s$rotation[,1:2], labels=colnames(attr),pos=c(4,2,2,4,4,4))
+```
+
+Here we see the scores and loadings for the first two principal components of the composition and attributes of the 8 different cocoa samples.  For the composition, the variance is split evenly between the first two components, not surprising as knowing the composition (100%) requires knowing the percentage of two of the three components.  The loadings clearly show this with an equilateral triangle.  For the attributes, it is interesting to note the scores are identical, even if the percentage of variation contained in each component is not.
+
+####b) Partial Least-Squares
+
+```{r}
+#RMSEP<-NULL
+par(mfrow=c(2,3))
+for(i in 1:6){
+    
+    #do pls-1 for each of 6 y variables
+    #keep 2 lv
+    #plot measured vs predicted for y 
+    #make table of RMSECV (2 comp) vs assessment
+reg1<-plsr(attr_s[,i]~prop_s,ncomp=2,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
+yfitted1<-reg1$fitted.values[,,2]
+plot(yfitted1 ~ attr_s[,i], xlab="Measured Level",ylab="Predicted Level", main=paste0("PLS Regression- ",colnames(attr)[[i]]),col="blue")
+abline(0,1,col="grey")
+text(yfitted1~attr_s[,i],labels=1:8, pos=c(1,4,1,1,1,1,1,3))
+}
+```
+
+
+####c) 
+
+
+
+
+##Question 3 - Shootout2
+
+First we load our data and separate it into response and properties (composition).
+
+```{r}
+data3<-read.csv("data/HW_3-3.csv")
+head(data3)
+resp<-as.matrix(data3[,-c(247:250)],nrow=36)
+prop<-as.matrix(data3[, c(247:250)],ncol=4)
+qr(prop)
+a<-qr(resp)
+```
+
+####a) Rank of the Data
+Since the composition of the solutions is closed (ie adds to 100%), the rank of the data should be at most 3, but attempting to estimate the rank of the response data returns `r a[[1]]`, the minimium of the dimensions of the response matrix.
+
+
+####b) Creation of PLS-1 model for Acetone concentration
+```{r}
+cal_resp<-resp[1:24,]
+cal_resp_s<-scale(cal_resp,scale=T)
+cal_prop<-prop[1:24,]
+reg1<-plsr(cal_prop[,1]~cal_resp_s,validation="CV",method="simpls", segments=6,segments.type="random",scale=T,model=T,x=T,y=T )
+yfitted1<- reg1$fitted.values[,,1]
+yfitted2<- reg1$fitted.values[,,2]
+yfitted3<- reg1$fitted.values[,,3]
+
+
+matplot(1:13,resp,type="l",ylab="Level",xlab="Index",main="PLS Regression- Scaled")
+matpoints(1:13,yfitted1,type="p",col="red",pch=1)
+```
+
+```{r}
+plot(reg1, "val", val.type="MSEP",estimate="CV", main="PLS, Scaled", col="red")
+plot(reg1,"loadings", comps=1:3, main="PLS Loadings, Scaled")
+plot(reg1,"scores", main="PLS Scores, Scaled", col="blue")
+yfitted1<- reg1$fitted.values[,,3]
+# when scale=TRUE, the fitted values are corrected
+plot(yfitted1 ~ cal_prop[,1], xlab="Measured Level",ylab="Predicted Level", main="PLS Regression- Scaled")
+abline(0,1,col="red")
+index<-1:24
+matplot(index,cal_prop[,1],type="l",ylab="Level",xlab="Index",main="Liquid-Fed Ceramic Melter: PLS Regression- Scaled")
+matpoints(index,yfitted1,type="p",col="blue", pch=1)
+matplot(index,reg1$residuals[,,3],type="l",ylab="Residuals",col="blue",xlab="Index",main="Liquid-Fed Ceramic Melter: PLS Regression- Scaled")
+abline(h=0, col="gray")
+plot(reg1$coefficients[,,3]~seq(1:246),type="b",xlab="Thermocouple No.", ylab="Coefficient", main="PLS Regression, Scaled",col="red")
+abline(h=0, col="gray")
+```
