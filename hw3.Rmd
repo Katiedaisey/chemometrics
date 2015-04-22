@@ -23,7 +23,7 @@ obs<-as.matrix(data1[,-c(1,2,9,10)],nrow=13)
 resp<-as.matrix(data1[,2],ncol=1)
 obss<-scale(obs, scale=T)
 
-matplot(obss,type="l")
+matplot(obs,type="l")
 points(1:13,resp,type="l")
 
 #pls regression - cross-validated leave one out
@@ -110,6 +110,7 @@ prop<-as.matrix(data2[,2:4],ncol=3)
 attr<-as.matrix(data2[,5:10],ncol=6)
 
 
+
 prop_s<-scale(prop)
 attr_s<-scale(attr)
 pca_prop_s<-prcomp(prop_s, center=F, scale=F)
@@ -169,11 +170,12 @@ First we load our data and separate it into response and properties (composition
 
 ```{r}
 data3<-read.csv("data/HW_3-3.csv")
-head(data3)
+data3[1,]
 resp<-as.matrix(data3[,-c(247:250)],nrow=36)
 prop<-as.matrix(data3[, c(247:250)],ncol=4)
 qr(prop)
 a<-qr(resp)
+matplot(resp,type="l")
 ```
 
 ####a) Rank of the Data
