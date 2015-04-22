@@ -10,29 +10,36 @@ output: html_document
 2b - access to RMSECV
 
 ```{r}
+library(pls)
+library(MVR)
 library(Matrix)
 ```
 ##Question 1 - Partial Least-Squares
+Modified From Brereton) quantitative structure-activity relations (QSAR) and related areas rely on PLS regression. The goal here is to build a predictive model for the property A1 for a benzodiazepine compound using the retention of this compound measured on several chromatographic stationary phases. The data are in HW#3-1.csv .
 
 ####a) Cross-Validated PLS-1
 
 The data was loaded, split into observations and responses and then standardized.
+
 ```{r}
 data1<-read.csv("data/HW_3-1.csv")
 obs<-as.matrix(data1[,-c(1,2,9,10)],nrow=13)
 resp<-as.matrix(data1[,2],ncol=1)
+matplot(t(obs),type="l",col=2:5, xlab="Phases",ylab="Retention",main="Retention of benzodiazepine compound")
 obss<-scale(obs, scale=T)
 
-matplot(obs,type="l")
+matplot(t(obss),type="l",col=2:5)
 points(1:13,resp,type="l")
 
 #pls regression - cross-validated leave one out
 reg1<-plsr(resp~obss,ncomp=6,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
 summary(reg1)
-plot(reg1, "val", val.type="MSEP",estimate="CV", main="PLS, Scaled", col="red")
+plot(reg1, "val", val.type="MSEP",estimate="CV", main="PLS, Scaled", type="b", col="red")
+round(sqrt(sum((resp-reg1$validation$pred[,,2])^2)/13),4)
+
 ```
 
-Doing a partial least-squares regression using leave one out cross validation ("LOO"), we see a minimum RMSEP of cross validation with 2 components. We would exp
+Doing a partial least-squares regression using leave one out cross validation ("LOO"), we see a minimum RMSEP of cross validation with 2 components. We would expect an error of `r round(sqrt(sum((resp-reg$validation$obss[,,2])^2)/13,4)`.
 
 
 ####b) PLS with 2 Components
@@ -42,7 +49,14 @@ Let's build a PLS model with only the appropriate number of components (ie 2).
 ```{r}
 reg2<-plsr(resp~obss,ncomp=2,validation="LOO",method="simpls",scale=T,x=T,y=T,model=T)
 summary(reg2)
+plot(reg2);abline(0,1,col=2)
 #plot leverage vs studentized residuals
+
+a<-matrix(reg2$loadings[1:12],ncol=2)
+h<-a%*%(solve(t(a)%*%a))%*%t(a)
+leverage<-diag(h)
+
+
 ```
 
 
